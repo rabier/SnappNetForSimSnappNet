@@ -15,6 +15,7 @@
 This project is a cousin of the (main) project MySnappNet.
 SnappNetForSimSnappNet was used for analyzing simulated data since it handles count data and not DNA sequences.
 
+In the folder /workspace-beast2/SnappNetForSimSnappNet/doc, some sommand lines are given on how to run  SnappNetForSimSnappNet
 
-Some informations are given at http://charles-elie.rabier.pagesperso-orange.fr/doc/SnappNet.html . 
+Some extra informations on xml input files are given at http://charles-elie.rabier.pagesperso-orange.fr/doc/SnappNet.html . 
 
