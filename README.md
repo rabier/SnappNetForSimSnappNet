@@ -13,8 +13,7 @@
 ***********************************************************************************************************************
 
 This project is a cousin of the (main) project MySnappNet.
-SnappNetForSimSnappNet was used for analyzing simulated data since it handles another input format.
-
+SnappNetForSimSnappNet was used for analyzing simulated data since it handles count data and not DNA sequences.
 
 
 Some informations are given at http://charles-elie.rabier.pagesperso-orange.fr/doc/SnappNet.html . 
