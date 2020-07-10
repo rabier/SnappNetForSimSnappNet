@@ -1,0 +1,431 @@
+
+/*
+ * File FMatrix.java
+ *
+ * Copyright (C) 2010 Remco Bouckaert, David Bryant remco@cs.auckland.ac.nz
+ *
+ * This file is part of SnAP.
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership and licensing.
+ *
+ * SnAP is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ *  SnAP is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with SnAP; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+ * Boston, MA  02110-1301  USA
+ */
+package speciesnetwork;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import snap.distribution.Num;
+
+/**FMatrixAugmented contains a Fmatrix and extra key elements 
+ * **/ 
+
+
+/** The FMatrix contains a site distribution for a node.
+ *  This is the likelihood multiplied by the lineage probabilities Pr(Ry | n,r ) x Pr(n)  in the paper.
+ *  **/
+
+
+// CE : my goal is to remove m_n and only deal with  m_n_MultiDim
+
+public class FMatrixAugmented {
+		
+	public List<Integer> branchNumbers;
+	public List<String> branchLocations;
+	public List<Integer>  m_n_MultiDim;
+	
+	public List<Boolean> isBranchAboveRetic;
+	
+	
+	
+	int m_n;
+	public double [] F;
+	// F is private but CE changes to public for the moment
+	
+	public int getSize() {
+		return m_n;
+	}
+	
+	public List<Integer> getSizeMultidDim() {
+		return m_n_MultiDim;
+	}
+	
+	
+	public int getIndex(int i) {		 
+		int index = branchNumbers.indexOf(i);
+		return index;		
+	}
+	
+	public double [] getF() {		
+				
+		return F;
+	}
+	
+	
+	
+	public double get(int n, int r) {return F[n*(n+1)/2-1+r];}
+	public void set(int n, int r, double f) {F[n*(n+1)/2-1+r] = f;} //Needed to make this public to handle dominant markers. Could move that calculation here?
+//	private void mul(int n, int r, double f) {F[n*(n+1)/2-1+r] *= f;}
+//	private void add(int n, int r, double f) {F[n*(n+1)/2-1+r] += f;}
+//	private void setZero(int n) {Arrays.fill(F, n*(n+1)/2-1, (n+1)*(n+2)/2-1, 0.0);} 
+//	private void setZero() {Arrays.fill(F, 0.0);} 
+	
+	
+	public void addBranchNumbersAndLocations(int i, String loc){
+			branchNumbers.add(i);
+			branchLocations.add(loc);
+			}
+	
+	
+	
+	public double [] asVectorCopy() {
+		double [] copy = new double[F.length];
+		System.arraycopy(F,0,copy,0,F.length);
+		return copy;
+	}
+	public double [] asVectorCopyBase1() {
+		double [] copy = new double[F.length + 1];
+		System.arraycopy(F,0,copy,1,F.length);
+		return copy;
+		}
+	
+	//public double [] asVector() {return F;}
+	public FMatrixAugmented() {
+		m_n = 0;
+	}
+
+	public FMatrixAugmented(int n) {
+		resize(n);
+	}
+	
+	public FMatrixAugmented(FMatrixAugmented other) {
+		assign(other);
+	} // c'tor
+	
+	
+	// est ce que je l ai utilise ce constructeur ???????
+	/** construct a top?? likelihood **/
+	/*
+	public FMatrixAugmented(List<Integer> n_MultiDim, double []_F, List<Integer> _branchNumbers,
+	List<String> _branchLocations, int index) {
+		
+		
+		m_n_MultiDim = n_MultiDim;
+		branchNumbers = _branchNumbers;
+		branchLocations = _branchLocations;
+		branchLocations.set(index, "T");
+		F = _F;
+		
+	} // c'tor
+*/
+	
+	
+		
+	// CE we will see if we need that constructor
+	/** construct a top-of-branch likelihood for leaf branch**/
+	public FMatrixAugmented(int n, double []_F, List<Integer> _branchNumbers,
+			List<String> _branchLocations) {
+		
+		
+		System.out.println("Je suis ds le constructeur de FMatrixAugmented pour lexponentiar unidim \n");
+		System.out.println("voici le F a copier" + _F +"\n");
+		m_n_MultiDim = Arrays.asList(n);
+		F = _F;
+		branchNumbers = _branchNumbers;
+		branchLocations = _branchLocations;
+		branchLocations.set(0, "T");
+	
+	} // c'tor
+	
+	
+	/**constructor for left branch of reticulation node   **/
+	public FMatrixAugmented(FMatrixAugmented fBelowRetic, int leftBranchNumber, int belowReticBranchNumber, double inheritProb) {
+		
+		m_n_MultiDim = new ArrayList<Integer>(fBelowRetic.m_n_MultiDim);		
+		int indListBelowReticBranchNumber=fBelowRetic.getIndex(belowReticBranchNumber);
+		int m_n_BelowRet=fBelowRetic.getSizeMultidDim().get(indListBelowReticBranchNumber);				
+		m_n_MultiDim.add(indListBelowReticBranchNumber, m_n_BelowRet);
+		
+		branchNumbers= new ArrayList<Integer>(fBelowRetic.branchNumbers);
+		branchLocations= new ArrayList<String>(fBelowRetic.branchLocations);
+		isBranchAboveRetic= new ArrayList<Boolean>(fBelowRetic.isBranchAboveRetic);
+				
+		branchNumbers.remove(indListBelowReticBranchNumber);
+		branchLocations.remove(indListBelowReticBranchNumber);
+		isBranchAboveRetic.remove(indListBelowReticBranchNumber);
+		
+		branchNumbers.add(indListBelowReticBranchNumber,leftBranchNumber+1);
+		branchNumbers.add(indListBelowReticBranchNumber,leftBranchNumber);		
+		branchLocations.add(indListBelowReticBranchNumber,"B");
+		branchLocations.add(indListBelowReticBranchNumber,"B");					
+		isBranchAboveRetic.add(indListBelowReticBranchNumber,true);
+		isBranchAboveRetic.add(indListBelowReticBranchNumber,true);
+		
+		resizeMultiDim();//initialise F
+				
+		//fill in F		
+		
+		List<Integer> n_listBot = new ArrayList<Integer>(m_n_MultiDim);
+		List<Integer> r_listBot = new ArrayList<Integer>(m_n_MultiDim);	
+		
+		System.out.println("Voici n_list" + n_listBot+ "\n");
+		System.out.println("Voici r_list" + r_listBot+ "\n");
+		
+		
+		System.out.println("Voici n_list below Retic" + fBelowRetic.m_n_MultiDim+ "\n");
+		List<Integer> n_listTop = new ArrayList<Integer>(fBelowRetic.m_n_MultiDim);
+		List<Integer> r_listTop = new ArrayList<Integer>(fBelowRetic.m_n_MultiDim);
+		
+		System.out.println("Voici n_listTop" + n_listTop+ "\n");
+		System.out.println("Voici r_listTop" + r_listTop+ "\n");
+		
+				
+		for (int s = 1; s <= m_n_BelowRet; s++) {
+			//s lineages at the top of the edge below retic node
+						
+			n_listTop.set(indListBelowReticBranchNumber, s);
+			
+			
+			for (int j = 0; j <= s; j++) {
+				// j among lineages go left, s-j go right						
+		
+				//n_listBot.get(indListBelowReticBranchNumber); //get value at location refering to left branch
+				//n_listBot.get(indListBelowReticBranchNumber+1); //get value at location refering to right branch
+				n_listBot.set(indListBelowReticBranchNumber, j);
+				n_listBot.set(indListBelowReticBranchNumber+1, s-j);					
+			
+					for (int rTopBelow = 0; rTopBelow <= s; rTopBelow++) {
+													
+						r_listTop.set(indListBelowReticBranchNumber, rTopBelow);
+								
+						for (int rLeft = 0; rLeft<= Math.min(j,rTopBelow); rLeft++) { 
+													
+							r_listBot.set(indListBelowReticBranchNumber, rLeft);
+							r_listBot.set(indListBelowReticBranchNumber+1, rTopBelow-rLeft);										 
+							Num C=new Num();
+							double coeff= Math.pow(inheritProb,j)	* Math.pow(1-inheritProb,s-j) * C.combination(s,j);							
+							F[getLocationMultidDim(n_listBot, r_listBot)] =	coeff * fBelowRetic.getF()[fBelowRetic.getLocationMultidDim(n_listTop, r_listTop)];						
+							
+						}		
+					}	
+			}	
+		
+		}
+	}
+	
+	
+	
+	//WAITTTTTT
+	
+
+	void goToTopMultiDim( double u, double v, double gamma, double height ) {
+				//to go at the top of a branch, in presence of other branches
+		try {
+			
+			F = MatrixExponentiatorMultiDim.expQTtxUniDim(m_n_MultiDim.get(0),u, v, gamma, height, this);						
+			branchLocations.set(0, "T");
+			
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+	
+	
+	//END WAITTTTT
+	
+	
+	
+	void goToTopUniDim( double u, double v, double gamma, double height ) {
+				//to go at the top of a leaf branch
+		try {
+			
+			F = MatrixExponentiatorMultiDim.expQTtxUniDim(m_n_MultiDim.get(0),u, v, gamma, height, this);						
+			branchLocations.set(0, "T");
+			
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+	
+	
+	
+	
+	/** construct a leaf likelihood **/
+	public FMatrixAugmented(int n, int nReds) {
+		//resize(n);
+		//nrList.add(n);
+		//nrList.add(nReds);
+		
+		m_n_MultiDim=new ArrayList<Integer>(Arrays.asList(n));
+		branchNumbers = new ArrayList<Integer>();
+		branchLocations = new ArrayList<String>();
+		isBranchAboveRetic = new ArrayList<Boolean>(Arrays.asList(false));
+		
+		resizeMultiDim();
+		if (n > 0) {
+			setMultiDim(Arrays.asList(n), Arrays.asList(nReds), 1.0);
+			//specific to leaf likelihood because of the 1
+						
+			//set(n, nReds, 1.0);
+		}
+		
+		
+	} // c'tor
+	
+	
+	
+	//public void assign(double [][] other) {
+	//	for(int i=1;i<=m_n;i++) {
+	//		System.arraycopy(other[i], 0, F , i*(i+1)/2-1 , i+1);
+	//	}
+	//} // copy
+	
+	void resize(int n) {
+		if (F != null && getSize() == n) {
+			// no need to resize, just init to zero
+			Arrays.fill(F, 0);
+		}
+		m_n = n;
+		F = new double[(n+1)*(n+2)/2-1];
+	} // resize
+	
+	
+
+	
+	
+	public double getMultiDim(List<Integer> n_List, List<Integer> r_List) 
+	{		 
+		return F[getLocationMultidDim(n_List, r_List)];
+	}
+	
+
+
+
+	public void setMultiDim(List<Integer> n_List, List<Integer> r_List, double f)
+	{
+		F[getLocationMultidDim(n_List, r_List)]=f;		
+	} 	
+	
+
+		void resizeMultiDim() {
+			
+			int product = 1; 
+			int ind=0;
+		     for (int i : m_n_MultiDim) {
+		     	
+		    	 System.out.println("Voila la valeur de  isBranchAboveRetic.get(ind)"+ isBranchAboveRetic.get(ind)+ "\n");
+		    	 
+		    	 if (!isBranchAboveRetic.get(ind))
+		    	 {
+		    	 System.out.println("JE passe ICI \n ");		         	
+		    	 product = product * ((i+1)*(i+2)/2-1);		    	 
+		    	 }else {
+		    		//deal with and edge above retic node 
+		    	product = product * ((i+1)*(i+2)/2);	
+		    	 }
+		    	ind ++; 
+		     }
+			     
+		     
+			F = new double[product];			
+		} // resize
+		
+		 
+		public int getLocationMultidDim(List<Integer> n_List, List<Integer> r_List) 
+		{		
+			int n_Lineage=0;
+			int r_Lineage=0;
+			int location=0;
+			
+			for (int j = 0; j < n_List.size(); j++) {				
+				n_Lineage=n_List.get(j);	 
+				r_Lineage = r_List.get(j);			
+			
+				if (!isBranchAboveRetic.get(j)) {		    	 				
+					location = location + (n_Lineage*(n_Lineage+1)/2 + r_Lineage -1) * calc(m_n_MultiDim,j+1);
+				} else {
+					location = location + (n_Lineage*(n_Lineage+1)/2 + r_Lineage) * calc(m_n_MultiDim,j+1);					
+				}
+			
+			}
+			
+			System.out.println(location + "DimRetic\n");
+			return location;
+		}
+			
+		
+		
+
+		public int  calc(List<Integer> n_MultidDim, int ind) 
+		{
+			
+			int prod=1;
+			int n_Lineage=0;
+			for (int j = ind; j < n_MultidDim.size(); j++) {	
+				n_Lineage=n_MultidDim.get(j);
+			
+				if (!isBranchAboveRetic.get(j)) {
+					prod=prod*((n_Lineage+1)*(n_Lineage+2)/2 -1) ;			
+				} else {
+					prod=prod*((n_Lineage+1)*(n_Lineage+2)/2) ;	
+				}
+			}		
+			return prod;
+					
+		}
+		
+			
+		
+	
+	
+	void rawresize(int n) {
+		if (F != null && getSize() == n) {
+			return;
+		}
+		m_n = n;
+		F = new double[(n+1)*(n+2)/2-1];
+	} // resize
+	
+
+	public void assign(FMatrixAugmented other) {
+		int n = other.getSize();
+		rawresize(n);
+		if (getSize() != other.getSize()) {
+			System.err.println("diff in length " + getSize() +"!="+ other.getSize());
+		}
+		System.arraycopy(other.F, 0, F , 0 , F.length);
+	} // assign
+	
+	public String toString() {
+		int n = getSize();
+		StringBuffer buf = new StringBuffer(); 
+		for(int i=1;i<=n;i++) {
+			for(int r=0;r<=i;r++) {
+				buf.append(get(i,r)+" ");
+			}
+			buf.append(';');
+		} 
+		return buf.toString();
+	} // toString
+
+	
+	
+	
+} // class FMatrix

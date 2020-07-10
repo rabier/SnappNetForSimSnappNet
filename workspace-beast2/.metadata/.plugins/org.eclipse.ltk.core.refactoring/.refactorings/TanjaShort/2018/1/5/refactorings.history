@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Copy element &apos;FMatrixAugmented.java&apos; to &apos;speciesnetwork.MatrixExponentiator.java&apos;&#x0A;- Original project: &apos;TanjaShort&apos;&#x0A;- Destination element: &apos;speciesnetwork.MatrixExponentiator.java&apos;&#x0A;- Original element: &apos;speciesnetwork.FMatrixAugmented.java&apos;" description="Copy compilation unit" destination="/src&lt;speciesnetwork{MatrixExponentiator.java" element1="/src&lt;speciesnetwork{FMatrixAugmented.java" files="0" flags="589830" folders="0" id="org.eclipse.jdt.ui.copy" policy="org.eclipse.jdt.ui.copyResources" stamp="1517222869968" units="1" version="1.0"/>
+</session>

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Copy element &apos;SnapSubstitutionModel.java&apos; to &apos;speciesnetwork.SanityChecks.java&apos;&#x0A;- Original project: &apos;BUILD_SnAP&apos;&#x0A;- Destination element: &apos;speciesnetwork.SanityChecks.java&apos;&#x0A;- Original element: &apos;snap.likelihood.SnapSubstitutionModel.java&apos;" description="Copy compilation unit" destination="=TanjaShort/src&lt;speciesnetwork{SanityChecks.java" element1="/src&lt;snap.likelihood{SnapSubstitutionModel.java" files="0" flags="589830" folders="0" id="org.eclipse.jdt.ui.copy" policy="org.eclipse.jdt.ui.copyResources" stamp="1516185439937" units="1" version="1.0"/>
+</session>

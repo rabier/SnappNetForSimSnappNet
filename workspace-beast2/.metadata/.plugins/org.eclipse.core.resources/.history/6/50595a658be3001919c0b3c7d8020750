@@ -1,0 +1,1037 @@
+
+/*
+ * File SnAPTreeLikelihood.java
+ *
+ * Copyright (C) 2010 Remco Bouckaert, David Bryant remco@cs.auckland.ac.nz
+ *
+ * This file is part of SnAP.
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership and licensing.
+ *
+ * SnAP is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ *  SnAP is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with SnAP; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+ * Boston, MA  02110-1301  USA
+ */
+
+
+// analogue to SimpleSnAPTreeLikelihood but more general !
+
+
+package speciesnetworkBIS;
+
+
+import java.io.FileNotFoundException;
+import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
+
+import javax.xml.bind.JAXBException;
+
+import org.xml.sax.SAXException;
+
+import com.google.common.collect.Multiset;
+import com.sun.xml.internal.bind.v2.runtime.reflect.ListIterator;
+
+import beast.app.BeastMCMC;
+import beast.core.Citation;
+import beast.core.Description;
+import beast.core.Distribution;
+import beast.core.Input;
+import beast.core.State;
+import beast.core.Input.Validate;
+import beast.core.parameter.IntegerParameter;
+import beast.core.parameter.RealParameter;
+import beast.evolution.alignment.Alignment;
+import beast.evolution.alignment.Sequence;
+import beast.evolution.alignment.TaxonSet;
+import beast.evolution.branchratemodel.StrictClockModel;
+import beast.evolution.likelihood.TreeLikelihood;
+import beast.evolution.sitemodel.SiteModel;
+import beast.evolution.tree.TreeInterface;
+//import snap.Data;
+//import snap.NodeData;
+//import snap.likelihood.SnAPLikelihoodCore;
+import beast.util.Randomizer;
+
+
+@Description("Implements a tree Likelihood Function for Single Site Sorted-sequences on a tree.") 
+
+@Citation(value="David Bryant, Remco Bouckaert, Joseph Felsenstein, Noah Rosenberg, Arindam RoyChoudhury. Inferring Species Trees Directly from Biallelic Genetic Markers: Bypassing Gene Trees in a Full Coalescent Analysis. Mol. Biol. Evol. 29(8):1917-1932, 2012", 
+	DOI="10.1016/j.ympev.2011.10.01")
+public class SnAPTreeLikelihoodGHOLD extends Distribution {
+	public Input<SnapData> m_pDataInput = new Input<SnapData>("data", "set of alignments");
+//	public Input<Tree> m_pTree = new Input<Tree>("tree", "tree with phylogenetic relations");
+	public final Input<Network> speciesNetworkInput =
+            new Input<>("speciesNetwork", "The species network.", Validate.REQUIRED);
+	
+	public Input<RealParameter> m_pU = new Input<RealParameter>("mutationRateU", "Instantaneous rate of mutating from the 0 allele to the 1 alelle");
+	public Input<RealParameter> m_pV = new Input<RealParameter>("mutationRateV", "Instantaneous rate of mutating from the 1 allele to the 0 alelle");
+	public Input<RealParameter> m_pCoalescenceRate = new Input<RealParameter>("coalescenceRate", "population size parameter with one value for each node in the tree");
+	
+	
+	//public SimpleSnAPTreeLikelihood() throws Exception {
+		// suppress some validation rules
+		//siteModelInput.setRule(Validate.OPTIONAL);
+	//}
+	
+   
+	
+	
+	/**
+     * Calculate the log likelihood of the current state.
+     *
+     * @return the log likelihood.
+	 * @throws Exception 
+     */
+    @Override
+    public double calculateLogP()  {
+    	
+	    //CE
+	    System.out.println("Je  passe dans calculateLogP de SimpleSnapTreeLikelihood.java\n");
+	    //END CE;    		
+	   
+        final Network speciesNetwork = speciesNetworkInput.get();
+        SanityChecks.checkNetworkSanity(speciesNetwork.getOrigin()); // species network should not be insane      
+        final int speciesBranchCount = speciesNetwork.getBranchCount();
+        System.out.println("Mon reseau contient "+ speciesBranchCount+ " branches\n");
+       
+        //gerons les theta
+        Double[] thetaValues = new Double[speciesNetwork.getBranchCount()];        
+        for (int j = 0; j < speciesNetwork.getBranchCount(); j++) { 
+        	thetaValues[j] =  Randomizer.nextDouble() ;        	 
+        	System.out.println("pour la branche "+ j + " Voici la valeur de theta " + thetaValues[j] + "\n");
+        }                        
+        //end theta...
+              
+        
+        // Handle snap data now !!!        
+        final SnapData m_pData = m_pDataInput.get();
+        List<TaxonSet> m_taxonsets=m_pData.m_taxonsets.get();        
+      
+        double u = m_pU.get().getValue();
+        double v = m_pV.get().getValue();
+        System.out.println("Voici le mutation rate u pour snap " + u + "\n");
+        System.out.println("Voici le mutation rate v pour snap " + v + "\n");
+        
+        double gamma = m_pCoalescenceRate.get().getValue();
+        System.out.println("Voici le gamma recu en entree " + gamma + "\n");      
+        
+        logP = 0.0;
+      
+        //DECLARATION
+        
+        
+        // From here I try to handle FMatrixAugmented        
+        FMatrixAugmented[] tableFMatAugmented = new FMatrixAugmented[speciesNetwork.getBranchCount()];        
+      
+        // We will see if we need this later
+        for (int j = 0; j < speciesNetwork.getBranchCount(); j++) {         	
+        	tableFMatAugmented[j]= new FMatrixAugmented();
+        }
+              
+        
+        // ********************* STEP 1 *****************************************
+        //Initialization of List of Nodes Ready to Be treated and
+        //and also the list of nodes not Ready to Be treated
+        
+        //Initialization of lists of Nodes Ready to Be treated 
+        // i.e. only the leaves are ready to be treated !!!  
+        ArrayList <NetworkNode>  networkNodesReadyToBeTreated = new ArrayList <NetworkNode>();
+        final NetworkNode[] networkLeaves=speciesNetwork.getLeafNodes(); 
+        
+        for (int j = 0; j < networkLeaves.length; j++) { 
+        networkNodesReadyToBeTreated.add(networkLeaves[j]);
+        }    
+        
+      
+        //Initialization of  List of Nodes Not Ready to Be treated 
+        // i.e. all the internal nodes are Not ready to be treated !!!     
+        ArrayList <NetworkNode>  networkNodesNotReadyToBeTreated = new ArrayList <NetworkNode>();
+        final NetworkNode[] networkInternalNodes=speciesNetwork.getInternalNodes(); 
+        for (int j = 0; j < networkInternalNodes.length; j++) { 
+            networkNodesNotReadyToBeTreated.add(networkInternalNodes[j]);
+            }         
+        
+              
+        //let us print theNodesReadyToBeTreated and theNodesNotReadyToBeTreated
+        //try {
+			this.printListNodes(networkNodesReadyToBeTreated.listIterator(),true);
+			this.printListNodes(networkNodesNotReadyToBeTreated.listIterator(),false) ;  
+		//} catch (SAXException | JAXBException e1) {
+			// TODO Auto-generated catch block
+		//	e1.printStackTrace();}
+        
+        
+        
+     // *********************END STEP 1 *****************************************
+        
+        
+    // ******************** STEP2 Version Bis***************************************
+        // handle leaves since leaves are ready to be treated
+        //Initialize FMatrixAugmented for the leaves of the network        
+        // Note that at this time we are at the Bottom B of those branches 
+
+        for (int j = 0; j < networkNodesReadyToBeTreated.size(); j++) {        
+        	
+        	NetworkNode myNodeToTreat=networkNodesReadyToBeTreated.get(j);
+        	//look for taxonset with same label as NetworkLeaves[j]
+        	for (int i = 0; i < m_taxonsets.size(); i++) {         		
+        		if (m_taxonsets.get(i).getID().equals(myNodeToTreat.getLabel())){ 	        			       			
+        			tableFMatAugmented[myNodeToTreat.gammaBranchNumber]= new FMatrixAugmented(m_taxonsets.get(i).getTaxonCount(),m_pData.getPattern(1)[i]);  
+        			//1 refers to the id of the site
+      			        		}
+        	}
+        	       	
+        	tableFMatAugmented[myNodeToTreat.gammaBranchNumber].addBranchNumbersAndLocations(myNodeToTreat.gammaBranchNumber,"B");    	
+        	//print it !!!
+        	System.out.println("Voici la   matrice F associee a ma FMatrixAugmented " );
+        	double [] theFBot=tableFMatAugmented[myNodeToTreat.gammaBranchNumber].getF();        
+        	for (int k = 0; k < theFBot.length; k++) { 
+        		System.out.println(theFBot[k] + " ; ");	        	
+        	} 
+        	System.out.println("\n\n");	 
+        }                 
+        
+        //Go to Top Of those branches
+        System.out.println("Let us go to TOP for leaves !!!\n");
+    	// let s move to the Top on those branches          
+        //So let us update FMatrixAugmented for the leaves by going at the top of their branches
+        for (int j = 0; j < networkNodesReadyToBeTreated.size(); j++) {         	
+        	
+        	try {         					
+        		NetworkNode myNodeToTreat=networkNodesReadyToBeTreated.get(j);
+				double heightBranch=myNodeToTreat.getParentByBranch(myNodeToTreat.gammaBranchNumber).getHeight();        		
+        		tableFMatAugmented[myNodeToTreat.gammaBranchNumber].goToTopLeaf(u, v, gamma, heightBranch);  
+        		System.out.println("je viens de faire B-> T de l'arete "+myNodeToTreat.gammaBranchNumber+"pr feuille "+myNodeToTreat.getLabel());
+			        	//try to print it !!!
+	        	double [] theFTop=tableFMatAugmented[myNodeToTreat.gammaBranchNumber].getF();
+	        	System.out.println("Voici la   matrice F associee a ma FMatrixAugmented " );
+	        	for (int k = 0; k < theFTop.length; k++) { 
+	        		System.out.println(theFTop[k] + " ; ");	        	
+	        	}
+	        	
+	        	System.out.println("\n\n");	 
+        	} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			};    	
+        }            
+
+        
+      //remove all the elements (i.e. the leaves) from the list of nodes ready to be treated
+        networkNodesReadyToBeTreated.clear();
+  
+        System.out.println("END STEP 2!!!\n");	
+    
+      // ******************** END STEP2 ***************************************
+
+        
+        // ******************** STEP3 ***************************************
+        //insert internal nodes whose children are leaves, into the list NetworkNodesReadyToBeTreated          
+        System.out.println("STEP 3!!!\n");	
+        int countChildLeaves;
+    	int count;        
+    	Multiset<NetworkNode> children;
+        for (int j = 0; j < networkInternalNodes.length; j++) {                 	       	        	
+        	//Multiset<NetworkNode> children=NetworkSpeciationNodes[j].getChildren(); 
+        	children=networkInternalNodes[j].getChildren(); 
+        	countChildLeaves=0;
+        	count=0;
+        	for (NetworkNode n: children) {        		
+        		count = n.isLeaf() ? 1 : 0;       		
+        		countChildLeaves=countChildLeaves + count;        		
+        	}        		
+        	       	
+        	if ( countChildLeaves==children.size() ) {
+        		//the speciation node is ready to be treated
+        		networkNodesReadyToBeTreated.add(networkInternalNodes[j]);       		
+        		//remove this node from the list NetworkNodesNotReadyToBeTreated
+        		networkNodesNotReadyToBeTreated.remove(networkInternalNodes[j]);
+        	} 
+        	        	
+        } 	        	
+        
+      
+        //let us print theNodesReadyToBeTreated and theNodesNotReadyToBeTreated
+        //try {
+			this.printListNodes(networkNodesReadyToBeTreated.listIterator(),true);
+			this.printListNodes(networkNodesNotReadyToBeTreated.listIterator(),false) ;  
+		//} catch (SAXException | JAXBException e1) {
+			// TODO Auto-generated catch block
+		//	e1.printStackTrace();}
+        
+           
+        System.out.println("Fin STEP 3 !!!\n");	 
+        
+               
+        
+        // ******************** END STEP3 ***************************************
+        
+        
+        while (!networkNodesReadyToBeTreated.isEmpty()){
+        	
+        	NetworkNode nodeReady = networkNodesReadyToBeTreated.listIterator().next() ; 
+        	
+        	
+        	if (nodeReady.isReticulation()) {
+        	  //case 3*
+        		
+        		 System.out.println("Handling case 3*!!!!!!\n");	         		
+        		 int belowReticBranchNumber=0;        		 
+            	 int lBranchNumber = nodeReady.gammaBranchNumber;            	 
+            	 Multiset<NetworkNode> reticChild = nodeReady.getChildren();          	 
+            	 for (NetworkNode n: reticChild) {        		
+            		 //use for because of Multiset<NetworkNode> 
+             		belowReticBranchNumber = n.gammaBranchNumber;      		        		
+            	 }        
+            	
+            	//start with right branch
+            	int rBranchNumber=lBranchNumber+1;
+            	tableFMatAugmented[rBranchNumber]=new FMatrixAugmented(tableFMatAugmented[belowReticBranchNumber], lBranchNumber, belowReticBranchNumber, nodeReady.inheritProb);
+             	// work with right branch number in order to fill in F with Matrix Exponentiator
+           	
+            	// Let us go to TOP on the right side    	
+            	double heightBranch=nodeReady.getParentByBranch(rBranchNumber).getHeight() - nodeReady.getHeight();             	        	
+            	tableFMatAugmented[rBranchNumber].goToBotTopRetic(u, v, gamma, heightBranch);   
+            	System.out.println(" Bot -> Top sur l arete right " + rBranchNumber);
+            	
+            	// Let us go to TOP on the left side            	
+            	heightBranch=nodeReady.getParentByBranch(lBranchNumber).getHeight() - nodeReady.getHeight();  
+            	
+            	System.out.println("Voici la taille de ma branche left" + heightBranch + "\n");
+            	System.out.println(" Bot -> Top sur l arete left " + lBranchNumber);           	       	
+            	tableFMatAugmented[rBranchNumber].goToTopTopRetic(u, v, gamma, heightBranch);
+            	           	
+            	System.out.println("Let us Clone the Fmatrix rbranch \n");
+        		// will see later if we need to clone them !!!
+        		for (int i : tableFMatAugmented[rBranchNumber].branchNumbers) {   		        		
+        			if (i!=rBranchNumber) {
+        			tableFMatAugmented[i]=tableFMatAugmented[rBranchNumber].getClone();}		  		        		  		
+        		}
+        	      	
+        		//let us update the list of nodes ready to be treated 		 	    
+        		NetworkNode parentNode=nodeReady.getParentByBranch(rBranchNumber);   		
+        		
+        		if (parentNode.isReticulation()) {  			
+        			networkNodesReadyToBeTreated.add(parentNode);
+        			networkNodesNotReadyToBeTreated.remove(parentNode);
+        		}else{        			
+            		int edgeNumber=parentNode.childBranchNumbers.get(0);    		
+            		if (parentNode.childBranchNumbers.get(0)==rBranchNumber) {
+            			edgeNumber=parentNode.childBranchNumbers.get(1);		
+            		}else {
+            			edgeNumber=parentNode.childBranchNumbers.get(0);    			
+            		}
+            		    
+            		if (!tableFMatAugmented[edgeNumber].branchNumbers.isEmpty()) {
+            			networkNodesReadyToBeTreated.add(parentNode);
+            			networkNodesNotReadyToBeTreated.remove(parentNode);  			
+            		}
+        			   			 			
+        		}
+        		
+        	
+        		//do the same for left branch
+        		parentNode=nodeReady.getParentByBranch(lBranchNumber);   		
+        		
+        		if (parentNode.isReticulation()) {  			
+        			networkNodesReadyToBeTreated.add(parentNode);
+        			networkNodesNotReadyToBeTreated.remove(parentNode);
+        		}else{
+        			
+            		int EdgeNumber=parentNode.childBranchNumbers.get(0);    		
+            		if (parentNode.childBranchNumbers.get(0)==lBranchNumber) {
+            			EdgeNumber=parentNode.childBranchNumbers.get(1);		
+            		}else {
+            			EdgeNumber=parentNode.childBranchNumbers.get(0);    			
+            		}
+            		    
+            		if (!tableFMatAugmented[EdgeNumber].branchNumbers.isEmpty()) {
+            			networkNodesReadyToBeTreated.add(parentNode);
+            			networkNodesNotReadyToBeTreated.remove(parentNode);  			
+            		}
+        			   			 			
+        		}
+        		    		
+        		//need to remove the retic node 
+        		networkNodesReadyToBeTreated.remove(nodeReady);
+        		
+       
+        	
+        	
+        }
+       
+        
+        // ******************** STEP4 ***************************************
+        //Let us deal with different cases        
+        // Case (3*), i.e. Handle Reticulation node
+                
+        System.out.println(" STEP 4 !!!\n");
+                
+        java.util.ListIterator<NetworkNode> iteratorReady = networkNodesReadyToBeTreated.listIterator() ;
+        NetworkNode nodeReady = iteratorReady.next() ;             
+        int belowReticBranchNumber=0;
+        
+        if (nodeReady.isReticulation()) {
+        	
+        	 System.out.println("Je dois traiter le cas 3*!!!!!!\n");	     	
+        	 int lBranchNumber = nodeReady.gammaBranchNumber;
+        	 nodeReady.getHeight();
+        	 System.out.println("La branche que je considere est la branche numero " + nodeReady.gammaBranchNumber + "\n");
+        	  	
+        	 Multiset<NetworkNode> reticChild = nodeReady.getChildren();
+        	 
+        	 for (NetworkNode n: reticChild) {        		
+        		 //use for because of Multiset<NetworkNode> 
+         		belowReticBranchNumber = n.gammaBranchNumber;      		        		
+        	 }        
+        	 
+      	 // C etait le bon !!
+        	//TableFMatAugmented[lBranchNumber]=new FMatrixAugmented(TableFMatAugmented[belowReticBranchNumber], lBranchNumber, belowReticBranchNumber, nodeReady.inheritProb);
+        	// end c etait le bon 
+        	
+        	int rBranchNumber=lBranchNumber+1;
+        	tableFMatAugmented[rBranchNumber]=new FMatrixAugmented(tableFMatAugmented[belowReticBranchNumber], lBranchNumber, belowReticBranchNumber, nodeReady.inheritProb);
+         	// work with right branch number in order to fill in F with Matrix Exponentiator
+        	
+        	System.out.println("Voici le champs m_n_Muldim de mon FF" + tableFMatAugmented[rBranchNumber].getSizeMultidDim() + "\n");
+        	 
+        	System.out.println("Voici le champs m_n_Muldim de mon FF en dessous" + tableFMatAugmented[rBranchNumber].getSizeMultidDim() + "\n");
+        	 
+        	        	
+        	System.out.println("Voici le champs branchNumbers de mon FF" + tableFMatAugmented[rBranchNumber].branchNumbers + "\n");
+        	
+        	System.out.println("Voici le champs branchLocations de mon FF" + tableFMatAugmented[rBranchNumber].branchLocations + "\n");
+        	 
+        	System.out.println("Voici le champs branchNumbers de mon FF en dessous" + tableFMatAugmented[belowReticBranchNumber].branchNumbers + "\n");
+        	
+        	System.out.println("Voici le champs branchLocations de mon FF  en dessous" + tableFMatAugmented[belowReticBranchNumber].branchLocations + "\n");
+        	
+        
+        	
+        	double [] theFBotBot=tableFMatAugmented[rBranchNumber].getF();
+        	System.out.println("Voici la  matrice F associee a ma FMatrixAugmented Bot Bot" );
+        	for (int k = 0; k < theFBotBot.length; k++) { 
+        		System.out.println(theFBotBot[k] + " ; ");	        	
+        	}
+        	
+        	double [] theFTop=tableFMatAugmented[belowReticBranchNumber].getF();
+        	System.out.println("Pour rappel " );
+        	System.out.println("Voici la   matrice F associee a ma FMatrixAugmented Top" );
+        	for (int k = 0; k < theFTop.length; k++) { 
+        		System.out.println(theFTop[k] + " ; ");	        	
+        	}
+        	System.out.println("Pour rappel, voici le gamma de Nakhleh " + nodeReady.inheritProb +  "\n" );
+        	
+        	        	       	
+        	// Let us go to TOP on the right side    	
+        	double heightBranch=nodeReady.getParentByBranch(rBranchNumber).getHeight() - nodeReady.getHeight();  
+        	System.out.println("Voici la taille de ma branche right" + heightBranch + "\n");
+        	        	
+        	tableFMatAugmented[rBranchNumber].goToBotTopRetic(u, v, gamma, heightBranch);   
+        	System.out.println(" Bot -> Top sur l arete right " + rBranchNumber);
+        	
+        	double [] theFBotTop=tableFMatAugmented[rBranchNumber].getF();
+        	System.out.println("Voici la  matrice F associee a ma FMatrixAugmented Bot Top" );
+        	for (int k = 0; k < theFBotTop.length; k++) { 
+        		System.out.println(theFBotTop[k] + " ; ");	        	
+        	}
+        	
+        	// Let us go to TOP on the left side  
+        	
+        	heightBranch=nodeReady.getParentByBranch(lBranchNumber).getHeight() - nodeReady.getHeight();  
+        	
+        	System.out.println("Voici la taille de ma branche left" + heightBranch + "\n");
+        	System.out.println(" Bot -> Top sur l arete left " + lBranchNumber);
+        	       	
+        	tableFMatAugmented[rBranchNumber].goToTopTopRetic(u, v, gamma, heightBranch);
+        	
+        	double [] theFTopTop=tableFMatAugmented[rBranchNumber].getF();
+        	System.out.println("Voici la  matrice F associee a ma FMatrixAugmented Top Top" );
+        	for (int k = 0; k < theFTopTop.length; k++) { 
+        		System.out.println(theFTopTop[k] + " ; ");	        	
+        	}
+        	
+        	
+        	//here TableFMatAugmented[rBranchNumber] is fine , and we are at Top Top 
+        	//i.e. at the top above each edge above the reticulate node
+        	
+        	
+    		
+        	System.out.println("Clonons la Fmatrix rbranch \n");
+    		// will see later if we need to clone them !!!
+    		for (int i : tableFMatAugmented[rBranchNumber].branchNumbers) {   		
+    		
+    			if (i!=rBranchNumber) {
+    			System.out.println("voici i " + i + " qui doit etre different de " + rBranchNumber + "\n");
+    			tableFMatAugmented[i]=tableFMatAugmented[rBranchNumber].getClone();}		  		
+    		  		
+    		}
+    		
+    		
+    		//let us update the list of nodes ready to be treated 		
+    		
+    		
+    
+    		NetworkNode parentNode=nodeReady.getParentByBranch(rBranchNumber);   		
+    		
+    		if (parentNode.isReticulation()) {  			
+    			networkNodesReadyToBeTreated.add(parentNode);
+    			networkNodesNotReadyToBeTreated.remove(parentNode);
+    		}else{
+    			
+        		int EdgeNumber=parentNode.childBranchNumbers.get(0);    		
+        		if (parentNode.childBranchNumbers.get(0)==rBranchNumber) {
+        			EdgeNumber=parentNode.childBranchNumbers.get(1);		
+        		}else {
+        			EdgeNumber=parentNode.childBranchNumbers.get(0);    			
+        		}
+        		    
+        		if (!tableFMatAugmented[EdgeNumber].branchNumbers.isEmpty()) {
+        			networkNodesReadyToBeTreated.add(parentNode);
+        			networkNodesNotReadyToBeTreated.remove(parentNode);  			
+        		}
+    			   			 			
+    		}
+    		
+        	
+    		//do the same for left branch
+    		parentNode=nodeReady.getParentByBranch(lBranchNumber);   		
+    		
+    		if (parentNode.isReticulation()) {  			
+    			networkNodesReadyToBeTreated.add(parentNode);
+    			networkNodesNotReadyToBeTreated.remove(parentNode);
+    		}else{
+    			
+        		int EdgeNumber=parentNode.childBranchNumbers.get(0);    		
+        		if (parentNode.childBranchNumbers.get(0)==lBranchNumber) {
+        			EdgeNumber=parentNode.childBranchNumbers.get(1);		
+        		}else {
+        			EdgeNumber=parentNode.childBranchNumbers.get(0);    			
+        		}
+        		    
+        		if (!tableFMatAugmented[EdgeNumber].branchNumbers.isEmpty()) {
+        			networkNodesReadyToBeTreated.add(parentNode);
+        			networkNodesNotReadyToBeTreated.remove(parentNode);  			
+        		}
+    			   			 			
+    		}
+    		    		
+    		//need to remove the retic node 
+    		networkNodesReadyToBeTreated.remove(nodeReady);
+    		
+    		
+    		// Let us print the list 
+    			System.out.println("Voici ma liste de noeuds not ready to be treated  !!!\n");	
+    	        
+    			 //let us print theNodesReadyToBeTreated and theNodesNotReadyToBeTreated
+    	       // try {
+    				this.printListNodes(networkNodesReadyToBeTreated.listIterator(),true);
+    				this.printListNodes(networkNodesNotReadyToBeTreated.listIterator(),false) ;  
+    			//} catch (SAXException | JAXBException e1) {
+    				// TODO Auto-generated catch block
+    			//	e1.printStackTrace();}
+    	        
+    			
+    				    	        
+    	        //end print
+    	      
+    	        
+    	        // ******************** STEP5 ***************************************
+    	        //Let us deal with  case        
+    	        // Case (2*), i.e. Handle internal node which is not reticulation node !!!
+    	           	        
+    	        System.out.println(" STEP 5 !!!\n");
+                
+    	        iteratorReady = networkNodesReadyToBeTreated.listIterator() ;
+    	        nodeReady = iteratorReady.next() ;             
+    	        System.out.println("Traitons le noeud" + nodeReady.getLabel() +" \n");
+    	        
+    	        FMatrixAugmented FMatChild1=tableFMatAugmented[nodeReady.childBranchNumbers.get(0)]; 
+    	        FMatrixAugmented FMatChild2=tableFMatAugmented[nodeReady.childBranchNumbers.get(1)]; 
+    	            	       
+    	        System.out.println("noeudReady est une reticulation ??" + nodeReady.isReticulation() +" \n");
+    	        System.out.println("noeudReady a combien d enfant??" + nodeReady.getChildCount() +" \n");
+    	        
+    	        if ( (!nodeReady.isReticulation()) &  (nodeReady.getChildCount()>1) ) {
+    	        	
+    	        	//need to account for another case !!!
+    	        	System.out.println("Je suis bien la !!! !!!!!!\n");	
+    	        		        	
+    	        	if (FMatChild1.compare(FMatChild2)){ 
+    	        		 System.out.println("Les 2 FMat sont bien egales !!!!!!\n");	  
+    	        	} else {
+    	        		System.out.println("Les 2 FMat ne sont pas egales !!!!!!\n");	  
+    	        		System.out.println("En effet , les tailles sont " + FMatChild2.branchNumbers.size()+ "\n");	
+    	        		System.out.println("et" + FMatChild1.branchNumbers.size()+ "\n");	
+    	        		
+    	        	}
+    	        	
+    	        	
+    	        }	
+    	        	
+    	        //warning : il faudra le mettre ds le else du dessus!
+    	        int branchNumber = nodeReady.gammaBranchNumber;
+    	        int branchFirstChild=nodeReady.childBranchNumbers.get(0);
+    	        int branchSecondChild=nodeReady.childBranchNumbers.get(1);
+    	       
+
+    	        System.out.println("Let us write some key elements !!!!!!\n");
+    	        System.out.println("Branch numbers"+  tableFMatAugmented[branchNumber].branchNumbers + "\n");
+    	        System.out.println("Branch locations"+  tableFMatAugmented[branchNumber].branchLocations + "\n");
+    	        System.out.println("isBranchAboveRetic"+  tableFMatAugmented[branchNumber].isBranchAboveRetic + "\n");
+  	        
+    	        //////////////////////////////////////////////////////////////////////
+    	        
+    	        double [] theFFirstChild=tableFMatAugmented[branchFirstChild].getF();
+            	System.out.println("AHAHH" );
+            	System.out.println("Voici la   matrice F associee au Child First" );
+            	for (int k = 0; k < theFFirstChild.length; k++) { 
+            		System.out.println(theFFirstChild[k] + " ; ");	        	
+            	}
+        		
+            	double [] theFSecondChild=tableFMatAugmented[branchSecondChild].getF();
+            	System.out.println("MAMMAAHH" );
+            	System.out.println("Voici la   matrice F associee au Child Second" );
+            	for (int k = 0; k < theFSecondChild.length; k++) { 
+            		System.out.println(theFSecondChild[k] + " ; ");	        	
+            	}
+     	        
+    	        
+    	        //////////////////////////////////////////////////////////////////////////
+            	//essayons d ecrire ds un fichier !!!
+            	
+            	/*
+            	PrintWriter writer = null;
+            	try {
+					 writer = new PrintWriter("the-file-name.txt", "UTF-8");
+				} catch (FileNotFoundException | UnsupportedEncodingException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+            	writer.println("The first line");
+            	writer.println("The second line");
+            	writer.close();
+            	*/
+            	
+            	/////////////////////////////////////////////////////
+    	        
+    	        tableFMatAugmented[branchNumber]=new FMatrixAugmented(tableFMatAugmented[branchFirstChild], tableFMatAugmented[branchSecondChild], branchFirstChild, branchSecondChild, branchNumber);
+    	       
+    	        System.out.println("Let us write some key elements !!!!!!\n");
+    	        System.out.println("Branch numbers"+  tableFMatAugmented[branchNumber].branchNumbers + "\n");
+    	        System.out.println("Branch locations"+  tableFMatAugmented[branchNumber].branchLocations + "\n");
+    	        System.out.println("isBranchAboveRetic"+  tableFMatAugmented[branchNumber].isBranchAboveRetic + "\n");
+    	        	        
+
+        		double [] theFinternal=tableFMatAugmented[branchNumber].getF();
+            	System.out.println("OHOHOH" );
+            	System.out.println("Voici la   matrice F associee a ma FMatrixAugmented InternalNode (I am at the Bot of the branch)" );
+            	for (int k = 0; k < theFinternal.length; k++) { 
+            		System.out.println(theFinternal[k] + " ; ");	        	
+            	}
+        		
+    	        ////////////////////////////////////////////////////////////////////////
+    	            
+    	        heightBranch=nodeReady.getParentByBranch(branchNumber).getHeight()-nodeReady.getHeight();        		
+        	    tableFMatAugmented[branchNumber].goToTopInternal(u, v, gamma, heightBranch);    
+        	    
+        	    System.out.println("je passe B -> T sur l'arete "+ nodeReady.gammaBranchNumber);
+            	
+        	 
+        		double [] theF=tableFMatAugmented[branchNumber].getF();
+            	System.out.println("HEYYYY " );
+            	System.out.println("Voici la   matrice F associee a ma FMatrixAugmented InternalNode (I am at the top of the branch)" );
+            	for (int k = 0; k < theF.length; k++) { 
+            		System.out.println(theF[k] + " ; ");	        	
+            	}
+        		
+        		
+            	System.out.println("Clonage   !!!!!!");
+            	System.out.println("Clonons la Fmatrix branchNumber \n");
+        		// will see later if we need to clone them !!!
+        		for (int i : tableFMatAugmented[branchNumber].branchNumbers) {   		
+        		
+        			if (i!=branchNumber) {
+        			System.out.println("voici i " + i + " qui doit etre different de " + branchNumber + "\n");
+        			tableFMatAugmented[i]=tableFMatAugmented[branchNumber].getClone();}		  		
+        		  		
+        		}
+        		
+        		
+        		//check if parent is ready        		
+        		
+        		parentNode=nodeReady.getParentByBranch(branchNumber);   
+        		System.out.println("Voici le parentNode" + parentNode.getLabel() +"\n");
+        		
+        		
+        		if (parentNode.isReticulation()) {  			
+        			System.out.println(" c est une reticulation !! \n");
+        			networkNodesReadyToBeTreated.add(parentNode);
+        			networkNodesNotReadyToBeTreated.remove(parentNode);
+        		}else {
+        			System.out.println(" ce n'est pas une reticulation !! \n");        			
+        		}
+        		
+            	
+            	
+        		nodeReady = iteratorReady.next() ;             
+    	        System.out.println("Traitons le noeud" + nodeReady.getLabel() +" \n");
+    	        
+    	        FMatChild1=tableFMatAugmented[nodeReady.childBranchNumbers.get(0)]; 
+    	        FMatChild2=tableFMatAugmented[nodeReady.childBranchNumbers.get(1)]; 
+    	            	       
+    	        System.out.println("noeudReady est une reticulation ??" + nodeReady.isReticulation() +" \n");
+    	        System.out.println("noeudReady a combien d enfant??" + nodeReady.getChildCount() +" \n");
+    	        
+    	        if ( (!nodeReady.isReticulation()) &  (nodeReady.getChildCount()>1) ) {
+    	        	
+    	        	//need to account for another case !!!
+    	        	System.out.println("Je suis bien la !!! !!!!!!\n");	
+    	        		        	
+    	        	if (FMatChild1.compare(FMatChild2)){ 
+    	        		 System.out.println("Les 2 FMat sont bien egales !!!!!!\n");	  
+    	        	} else {
+    	        		System.out.println("Les 2 FMat ne sont pas egales !!!!!!\n");	  
+    	        		System.out.println("En effet , les tailles sont " + FMatChild2.branchNumbers.size()+ "\n");	
+    	        		System.out.println("et" + FMatChild1.branchNumbers.size()+ "\n");	
+    	        		
+    	        		System.out.println("les branch Numbers de FMatchild2 sont " + FMatChild2.branchNumbers + "\n");	
+    	        		System.out.println("les branch Numbers de FMatchild1 sont " + FMatChild1.branchNumbers + "\n");
+    	        		
+    	        		
+    	        	}
+    	        	
+    	        	
+    	        }	
+            	
+    	        branchNumber=nodeReady.gammaBranchNumber;
+    	        
+    	        //attention comme precemment, il faut que mon noeud ait 2 enfants
+    	        branchFirstChild=nodeReady.childBranchNumbers.get(0);
+    	        branchSecondChild=nodeReady.childBranchNumbers.get(1);	        
+    	        
+    	        
+    	        tableFMatAugmented[branchNumber]=new FMatrixAugmented(tableFMatAugmented[branchFirstChild], tableFMatAugmented[branchSecondChild], branchFirstChild, branchSecondChild, branchNumber);
+     	       
+    	        System.out.println("Let us write some key elements !!!!!!\n");
+    	        System.out.println("Branch numbers"+  tableFMatAugmented[branchNumber].branchNumbers + "\n");
+    	        System.out.println("Branch locations"+  tableFMatAugmented[branchNumber].branchLocations + "\n");
+    	        System.out.println("isBranchAboveRetic"+  tableFMatAugmented[branchNumber].isBranchAboveRetic + "\n");
+    	        	   
+            	
+    	        
+
+        		theFinternal=tableFMatAugmented[branchNumber].getF();
+            	System.out.println("OHOHOH" );
+            	System.out.println("Voici la   matrice F associee a ma FMatrixAugmented InternalNode (I am at the Bot of the branch)" );
+            	for (int k = 0; k < theFinternal.length; k++) { 
+            		System.out.println(theFinternal[k] + " ; ");	        	
+            	}
+        		
+    	        ////////////////////////////////////////////////////////////////////////
+    	            
+    	        heightBranch=nodeReady.getParentByBranch(branchNumber).getHeight()-nodeReady.getHeight();        		
+        		tableFMatAugmented[branchNumber].goToTopInternal(u, v, gamma, heightBranch);    
+    	         
+        		System.out.println("je passe B -> T sur l'arete "+ nodeReady.gammaBranchNumber);
+            	
+        		
+        		theF=tableFMatAugmented[branchNumber].getF();
+            	System.out.println("HEYYYY " );
+            	System.out.println("Voici la   matrice F associee a ma FMatrixAugmented InternalNode (I am at the top of the branch)" );
+            	for (int k = 0; k < theF.length; k++) { 
+            		System.out.println(theF[k] + " ; ");	        	
+            	}
+    	        
+            	System.out.println(" J EN SUIS LA!!!!!!!!\n");
+                  	
+            	
+            	/// clonons le tout !!!
+            	
+            	System.out.println("Clonons la Fmatrix branchNumber \n");
+        		// will see later if we need to clone them !!!
+        		for (int i : tableFMatAugmented[branchNumber].branchNumbers) {   		
+        		
+        			if (i!=branchNumber) {
+        			System.out.println("voici i " + i + " qui doit etre different de " + branchNumber + "\n");
+        			tableFMatAugmented[i]=tableFMatAugmented[branchNumber].getClone();}		  		
+        		  		
+        		}
+        		
+           
+        		
+         ////////////////////////////////////////////////////////////////////////////////////////////////////////
+        		
+        		System.out.println("Refermons le reseau !\n");
+
+        		System.out.println("Refermons le reseau !\n");
+
+        		System.out.println("Refermons le reseau !\n");
+
+        		System.out.println("Refermons le reseau !\n");
+        		//check if parent is ready        		
+        		
+        		parentNode=nodeReady.getParentByBranch(branchNumber);   
+        		System.out.println("Voici le parentNode " + parentNode.getLabel() +"\n");
+        		
+        		
+        		if (parentNode.isReticulation()) {  			
+        			System.out.println(" c est une reticulation !! \n");
+        			networkNodesReadyToBeTreated.add(parentNode);
+        			networkNodesNotReadyToBeTreated.remove(parentNode);
+        		}else {
+        			System.out.println(" ce n'est pas une reticulation !! \n");  
+        			
+        			int	otherBranch= (parentNode.childBranchNumbers.get(0)== branchNumber) ? parentNode.childBranchNumbers.get(1)
+            				:parentNode.childBranchNumbers.get(0);
+            		
+            		if (!tableFMatAugmented[otherBranch].branchNumbers.isEmpty()){
+            			System.out.println(" je peux mettre mon noeud ds la liste ready car liste de branches non empty !! \n"); 
+            			networkNodesReadyToBeTreated.add(parentNode);
+            			networkNodesNotReadyToBeTreated.remove(parentNode);
+            			
+            			
+            			 //remove the children for parent Node from NetworkNodesReadyToBeTreated          	        
+            	        Multiset<NetworkNode> theChild = parentNode.getChildren();
+                   	 
+            	        for (NetworkNode n: theChild) {        		
+            	        	networkNodesReadyToBeTreated.remove(n);           	        	  		        		
+            	        }    
+            			        			
+            		}
+        			       			
+        		}
+        		
+        		
+        		System.out.println("Voici ma liste de noeud ready !! "+ networkNodesReadyToBeTreated +"\n"); 
+        		
+        		this.printListNodes(networkNodesReadyToBeTreated.listIterator(),true);
+    			this.printListNodes(networkNodesNotReadyToBeTreated.listIterator(),false) ;  
+    			nodeReady=networkNodesReadyToBeTreated.listIterator().next();
+        	
+        		        		           
+    	        System.out.println("Traitons le noeud" + nodeReady.getLabel() +" \n");
+    	        
+    	        FMatChild1=tableFMatAugmented[nodeReady.childBranchNumbers.get(0)]; 
+    	        FMatChild2=tableFMatAugmented[nodeReady.childBranchNumbers.get(1)]; 
+    	        	            	       
+    	        System.out.println("noeudReady est une reticulation ??" + nodeReady.isReticulation() +" \n");
+    	        System.out.println("noeudReady a combien d enfant??" + nodeReady.getChildCount() +" \n");
+    	        
+    	        
+    	        /////////////////////////////////////////////////////////////////
+    	        
+    	        if ( (!nodeReady.isReticulation()) &  (nodeReady.getChildCount()>1) ) {
+    	        	
+    	        	//need to account for another case !!!
+    	        	System.out.println("Je suis bien la !!! !!!!!!\n");	
+    	        		        	
+    	        	if (FMatChild1.compare(FMatChild2)){ 
+    	        		 System.out.println("Les 2 FMat sont bien egales !!!!!!\n");	  
+    	        	} else {
+    	        		System.out.println("Les 2 FMat ne sont pas egales !!!!!!\n");	  
+    	        		System.out.println("En effet , les tailles sont " + FMatChild2.branchNumbers.size()+ "\n");	
+    	        		System.out.println("et" + FMatChild1.branchNumbers.size()+ "\n");	
+    	        		
+    	        		System.out.println("les branch Numbers de FMatchild2 sont " + FMatChild2.branchNumbers + "\n");	
+    	        		System.out.println("les branch Numbers de FMatchild1 sont " + FMatChild1.branchNumbers + "\n");
+    	        		
+    	        		
+    	        	}
+    	        	
+    	        	
+    	        }	
+            	
+    	        branchNumber=nodeReady.gammaBranchNumber;
+                
+    	        //attention comme precemment, il faut que mon noeud ait 2 enfants
+    	        branchFirstChild=nodeReady.childBranchNumbers.get(0);
+    	        branchSecondChild=nodeReady.childBranchNumbers.get(1);	        
+    	        
+    	        
+    	        System.out.println("Voici la premiere branche child de nodeReady" + branchFirstChild + "\n");
+    	        System.out.println("Voici la deuxieme branche child de nodeReady" + branchSecondChild + "\n");
+    	        
+            
+    	      //  TableFMatAugmented[branchNumber]=new FMatrixAugmented(TableFMatAugmented[branchFirstChild], branchFirstChild, branchSecondChild, branchNumber);
+     	       
+          	
+    	        System.out.println("JEN SUIS LA !!!!!!!!!!!!!! \n");
+            	/// OUI ICIIIIIIIIIIIIIIIIIIIIIIII
+    	        
+    	        //////regerons les feuilles
+    	        for (int j = 0; j < networkLeaves.length; j++) { 
+    	        	/*
+    	        	FMatrixAugmented myFMatrixAugmented= new FMatrixAugmented(m_taxonsets.get(j).getTaxonCount(),m_pData.getPattern(0)[j]);      	
+    	        	//0 refers to the id of the site 	 
+    	        	*/
+    	        	System.out.println("La feuille numero " + j + "est de nom " +  networkLeaves[j].getLabel()+"\n");
+            	
+    	        	
+    	        	for (int k = 0; k < m_taxonsets.size(); k++) { 
+    	        		
+    	        		//System.out.println("La valeur de k est" + k + "\n");
+    	        		//System.out.println("Le taxon set associe a k est" + m_taxonsets.get(k).getID() +"\n");
+   	        		
+    	        		if (m_taxonsets.get(k).getID().equals(networkLeaves[j].getLabel())){ 	        			
+    	        			System.out.println("La feuille numero " + j + "de nom " +  networkLeaves[j].getLabel()+" est associee\n");
+    	        			System.out.println("au  tAxon set numero " + k + "de nom " +  m_taxonsets.get(k).getID() +"\n");    	        			   	        			
+    	        		}
+    	        	}
+    	        	
+    	        	
+    	        }
+    	        
+    	        System.out.println("OLALALLA \n");  	        
+    	        System.out.println("Sous le noeud  " + nodeReady.getLabel() +"\n");
+    	        System.out.println("Il y a " + nodeReady.getLeafNodeCount() + "feuilles presentes\n");
+    	        
+         
+            	
+    	        for (NetworkNode node:nodeReady.getChildren()) {
+    	      	     System.out.printf("Sous le noeud" + node.getLabel() + "\n");//CE    	      	     
+    	      	     System.out.printf("il y a " + node.getLeafNodeCount() + "feuilles presentes\n");//CE   	     
+    	      	 	}
+    	        
+    	       
+    	        ArrayList <Integer>  branchAboveDescendingLeaves = new ArrayList <Integer>();
+    	        // Calcule la liste des (branches au dessus des) feuilles du noeud nodeReady
+    	        nodeReady.getLeafBranchNumber(branchAboveDescendingLeaves);
+    	        System.out.printf("voici nodeReady leaves Branch" + branchAboveDescendingLeaves +"\n");
+    	        
+    	        int nMax=0; //will refer to the max number of lineages that go along this edge
+    	        for (int i=0; i<branchAboveDescendingLeaves.size(); i++) {
+    	        	 System.out.printf("voici la branche " + branchAboveDescendingLeaves.get(i) +"au dessus d'une feuille \n");
+    	        	 // la 1ere (et ici seule) dimension de la Fmatrix de cette branche = #indiv au depart pour cette espece
+    	        	 System.out.printf("Il y a nb lignees ds cette espece " + tableFMatAugmented[branchAboveDescendingLeaves.get(i)].m_n_MultiDim.get(0) + "\n");
+    	        	 nMax += tableFMatAugmented[branchAboveDescendingLeaves.get(i)].m_n_MultiDim.get(0);
+    	        }
+  
+    	        System.out.printf("voici nMax" + nMax +"\n");
+    	        
+    	        System.out.printf("voici le numero de la branche" + branchNumber +"\n");
+    	        tableFMatAugmented[branchNumber]=new FMatrixAugmented(tableFMatAugmented[branchFirstChild], branchFirstChild, branchSecondChild, branchNumber, nMax);
+    	        
+    	        theF=tableFMatAugmented[branchNumber].getF();
+            	System.out.println("Hello" );
+            	System.out.println("Voici la  matrice F associee au haut du blob" );
+            	double mySum=0;
+            	for (int k = 0; k < theF.length; k++) { 
+            		System.out.println(theF[k] + " ; ");
+            		mySum += theF[k];
+            	}
+            	System.out.println(" Voici la valeur de la somme de ma Fmatrix (arete "+branchNumber+") = " + mySum + "\n");
+            	
+            	System.out.println("Voici la valeur du gamma que j avais considere" + gamma + "\n");
+            	
+            	
+            	
+            	System.out.println(" JE SUIS A LA RACINE!!!!!!!!\n");
+    	        
+            	FMatrixAugmented rootFMatrix=tableFMatAugmented[branchNumber];
+            	
+            	SiteProbabilityCalculator SiteProb=new SiteProbabilityCalculator();
+            	
+            	double likelihoodSite=0;
+            	try {
+					likelihoodSite=SiteProb.doRootLikelihood(rootFMatrix, u, v, gamma, false);
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+            	
+            	System.out.println(" Voici la valeur de la likelihood pour le site 0 " + likelihoodSite + "\n");
+        
+    	        
+    	        //**********************************************************************************************************
+   	        
+            
+        }
+        
+        
+        	
+    	return logP=3;
+
+			// correction for constant sites. If we are sampling the numbers of constant sites 
+			// (stored in ascSiteCount) then we include these probabilities. Otherwise we 
+			// assume that we want conditional likelihood, in which case we divide 
+			// by the probability that a site is not ascertained (or more correctly,
+			// subtract the log probability.
+		
+//			logP = m_core.computeLogLikelihood(root, u , v, 
+//	    			m_nSampleSizes, 
+//	    			m_data2,
+//	    			coalescenceRate,
+//	    			fCategoryRates, fCategoryProportions,
+//	    			useCache,
+//	    			m_bUsenNonPolymorphic,
+//	    
+    }// calculateLogLikelihood
+
+
+
+    public void printListNodes(java.util.ListIterator<NetworkNode> listIterator, boolean ready) { //throws SAXException, JAXBException {
+    	
+    	if (ready==true) {
+    	 System.out.println("AWESOME !!! Voici ma liste de noeuds ready !!!\n");}
+    	else {
+    		System.out.println("BOUHHHHHH !!! Voici ma liste de noeuds not ready  !!!\n");}            
+
+         NetworkNode myNode;
+         while(listIterator.hasNext()) {
+         	myNode = listIterator.next() ;
+         	System.out.println(myNode.getLabel() +" ");
+         }
+         System.out.println("\n");
+        
+    	
+    }
+    
+ 
+    
+
+	@Override
+	public List<String> getArguments() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+
+
+	@Override
+	public List<String> getConditions() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+
+
+	@Override
+	public void sample(State state, Random random) {
+		// TODO Auto-generated method stub
+		
+	}
+    
+	
+	
+
+
+} // class SSSTreeLikelihood

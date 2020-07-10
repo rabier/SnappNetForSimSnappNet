@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Copy element &apos;test_3s.xml&apos; to &apos;Example&apos;&#x0A;- Original project: &apos;speciesnetwork&apos;&#x0A;- Destination element: &apos;Example&apos;&#x0A;- Original element: &apos;test_3s.xml&apos;" description="Copy file" element1="examples/test_3s.xml" files="1" flags="589830" folders="0" id="org.eclipse.jdt.ui.copy" policy="org.eclipse.jdt.ui.copyResources" stamp="1512568415515" target="/OurSnappNet/Example" units="0" version="1.0"/>
+</session>

@@ -1,0 +1,17 @@
+
+ 
+Project workspace-beast2
+
+cd ~/workspace-beast2/SnappNetForSimSnappNet/deliverable
+
+***** To run a MCMC Analysis with SnappNetForSimSnappNet
+
+java -jar SnappNetForSimSnappNet.jar ../example/test_NetA_SnappNetForSimSnappNet.xml
+
+
+for developpers: in eclipse , we are using the run configuration called ConfigOurSnappNetForSimSnappNet
+
+
+
+
+

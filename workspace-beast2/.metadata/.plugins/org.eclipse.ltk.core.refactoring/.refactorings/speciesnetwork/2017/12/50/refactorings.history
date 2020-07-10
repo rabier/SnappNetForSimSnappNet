@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Copy element &apos;RebuildEmbedding.java&apos; to &apos;TanjaShort/src/speciesnetwork.operators&apos;&#x0A;- Original project: &apos;speciesnetwork&apos;&#x0A;- Destination element: &apos;TanjaShort/src/speciesnetwork.operators&apos;&#x0A;- Original element: &apos;speciesnetwork.operators.RebuildEmbedding.java&apos;" description="Copy compilation unit" destination="=TanjaShort/src&lt;speciesnetwork.operators" element1="/src&lt;speciesnetwork.operators{RebuildEmbedding.java" files="0" flags="589830" folders="0" id="org.eclipse.jdt.ui.copy" policy="org.eclipse.jdt.ui.copyResources" stamp="1513088631796" units="1" version="1.0"/>
+</session>

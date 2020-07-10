@@ -1,0 +1,371 @@
+package speciesnetwork.operators;
+
+import java.awt.List;
+
+import com.google.common.collect.Multiset;
+
+import beast.core.Description;
+import beast.core.Input;
+import beast.core.Input.Validate;
+import beast.core.Operator;
+import beast.core.parameter.RealParameter;
+import beast.core.util.Log;
+import beast.util.Randomizer;
+import speciesnetwork.Network;
+import speciesnetwork.NetworkNode;
+import speciesnetwork.SanityChecks;
+
+/**
+ * This proposal adds a reticulation event by connecting two existing branches (with length l1 and l2) with a new branch.
+ * The same branch can be picked twice (and forms a loop to that branch). The cutting proportion of each picked branch by
+ * the connecting point, w1 and w2 ~ Uniform(0,1). Let l11 = l1 * w1, l12 = l1 * (1-w1), l21 = l2 * w2, l22 = l2 * (1-w2)
+ * The direction of the new branch is determined by the two connecting points, the higher is speciation node, and the
+ * lower is reticulation node. The gamma prob r = w3 ~ Uniform(0,1).
+ * The Jacobian is l1 * l2.
+ *
+ * The AddReticulation and DeleteReticulation are chosen with equal prob. If there is no reticulation in the network,
+ * the DeleteReticulation move is aborted.
+ * Let k be the number of branches in the current network. The probability of adding this branch is (1/k)(1/k)
+ * Let m be the number of reticulation branches in the proposed network. The probability of selecting the same branch to
+ * remove is (1/m).
+ * The Hastings ratio is (1/m) / [(1/k)(1/k)(g1)(g2)(g3)] = k^2 / m, with g1 = g2 = g3 = 1 (uniform density).
+ *
+ * See also DeleteReticulation.
+ *
+ * @author Chi Zhang
+ */
+
+@Description("Add a reticulation branch to the species network.")
+public class AddReticulationGH extends Operator {
+    public final Input<Network> speciesNetworkInput =
+            new Input<>("speciesNetwork", "The species network.", Validate.REQUIRED);
+    public Input<RealParameter> m_coalescenceRate = new Input<RealParameter>("coalescenceRate", "population sizes");
+
+    // empty constructor to facilitate construction by XML + initAndValidate
+    public AddReticulationGH() {
+    }
+
+    @Override
+    public void initAndValidate() {
+    }
+
+    @Override
+    public double proposal() {
+
+	
+
+        final Network speciesNetwork = speciesNetworkInput.get();
+        SanityChecks.checkNetworkSanity(speciesNetwork.getOrigin());        
+        
+        ///CE adds the constraint on number of reticulation nodes
+        //we set the limit to 2,we ll see later how to include a parametre in xml
+        final int nHybridNodes = speciesNetwork.getReticulationNodeCount();
+        if (nHybridNodes == 2)  // there is no reticulation branch to delete
+            return Double.NEGATIVE_INFINITY;        
+        //END CE     
+        
+        //CE  Is it useful startEditing ???
+        speciesNetwork.startEditing(this);
+        //END CE
+                
+        // number of branches in the current network
+        final int nBranches = speciesNetwork.getBranchCount();  // k
+
+        Log.debug.printf("L ancien reseau comprend " + nBranches + "branches\n");
+        
+        Log.debug.printf("J ajoute desormais un noeud de reticulation\n");
+        
+        //CE
+        RealParameter coalescenceRate = m_coalescenceRate.get(this);
+        Double [] coalescenceRateValues = coalescenceRate.getValues();  
+        Log.debug.printf("J'ai anciennement" +  coalescenceRateValues.length + "colaescence rates values\n");
+        //END CE
+       
+        //CE Affichons l ancien reseau !
+/*
+        Log.debug.printf("Detaillons l'ancien reseau ds AddReticulation !!!\n");//CE
+        for (NetworkNode node: speciesNetwork.getAllNodes()) {
+   	     Log.debug.printf("Je suis le noeud d id" + node.getNr() + "\n");//CE
+   	     Log.debug.printf("Mon nom est" + node.getLabel() + "\n"); 
+   	     final Integer BranchNumber = node.gammaBranchNumber;
+   	     Log.debug.printf("voici ma branche gamma" + node.gammaBranchNumber + "\n");//CE   
+   	     Log.debug.printf("voici ma hauteur" + node.getHeight() + "\n");
+   	     
+   	     	Log.debug.printf("J ai" + node.getParents().size() + "parents \n");
+   	     	for (NetworkNode nodeParent: node.getParents()){
+   	     		Log.debug.printf("Je suis le parent id" + nodeParent.getNr() + "\n");//CE
+   	     		Log.debug.printf("Mon nom est" + nodeParent.getLabel() + "\n"); 	
+   	     		
+   	     		/// je suis lie a machin par la branche ...
+   	     		if (node.getParentByBranch(node.gammaBranchNumber).getNr()== nodeParent.getNr()) {
+   	     		 Log.debug.printf("Et c est moi le parent lie par la branche gamma\n");	     			
+   	     		};
+   	     		
+   	     		
+   	     	}
+   	     	
+   	     	Log.debug.printf("Sinon, J ai" + node.getChildCount() + "enfants \n");
+	     	for (NetworkNode nodeChild: node.getChildren()){
+	     		Log.debug.printf("Je suis l enfant id" + nodeChild.getNr() + "\n");//CE
+	     		Log.debug.printf("Mon nom est" + nodeChild.getLabel() + "\n"); 	     		
+	     	}
+   	     
+   	     
+   	 	}
+        */
+      //end affichage ancien reseau !!!!!
+        //END CE
+       
+     
+                        
+        // pick two branches randomly, including the root branch
+        final Integer pickedBranchNr1 = Randomizer.nextInt(nBranches);
+        final Integer pickedBranchNr2 = Randomizer.nextInt(nBranches);  // allow picking the same branch
+
+        //CE
+        Log.debug.printf("Ds addRetGH, la branche 1 choisie est la numero" + pickedBranchNr1 + "\n");
+        Log.debug.printf("Ds addRetGH, la branche 2 choisie est la numero" + pickedBranchNr2 + "\n");
+        //END CE
+
+        // get the nodes associated with each branch
+        final int pickedNodeNr1 = speciesNetwork.getNodeNumber(pickedBranchNr1);
+        NetworkNode pickedNode1 = speciesNetwork.getNode(pickedNodeNr1);
+        final int pickedNodeNr2 = speciesNetwork.getNodeNumber(pickedBranchNr2);
+        NetworkNode pickedNode2 = speciesNetwork.getNode(pickedNodeNr2);
+        NetworkNode pickedParent1 = pickedNode1.getParentByBranch(pickedBranchNr1);
+        NetworkNode pickedParent2 = pickedNode2.getParentByBranch(pickedBranchNr2);
+
+        // propose the attaching position at each branch
+        final double l1, l2, l11, l21;
+        l1 = pickedParent1.getHeight() - pickedNode1.getHeight();
+        l11 = l1 * Randomizer.nextDouble();
+        l2 = pickedParent2.getHeight() - pickedNode2.getHeight();
+        l21 = l2 * Randomizer.nextDouble();
+
+        double logProposalRatio = Math.log(l1) + Math.log(l2);  // the Jacobian
+
+        // start moving
+        speciesNetwork.startEditing(this);
+
+        // create two new nodes
+        NetworkNode middleNode1 = new NetworkNode(speciesNetwork);
+        NetworkNode middleNode2 = new NetworkNode(speciesNetwork);
+        // set height
+        middleNode1.setHeight(pickedNode1.getHeight() + l11);
+        middleNode2.setHeight(pickedNode2.getHeight() + l21);
+
+        // add a branch joining the two middle nodes (picked branches)
+        if (middleNode1.getHeight() < middleNode2.getHeight()) {
+            speciesNetwork.addReticulationBranch(middleNode1, middleNode2, pickedBranchNr1, pickedBranchNr2);
+            middleNode1.setGammaProb(Randomizer.nextDouble());
+        } else {
+            speciesNetwork.addReticulationBranch(middleNode2, middleNode1, pickedBranchNr2, pickedBranchNr1);
+            middleNode2.setGammaProb(Randomizer.nextDouble());
+        }
+
+        SanityChecks.checkNetworkSanity(speciesNetwork.getOrigin());
+
+        // number of reticulation branches in the proposed network
+        final int nReticulationBranches = 2 * speciesNetwork.getReticulationNodeCount();  // m
+        logProposalRatio += 2 * Math.log(nBranches) - Math.log(nReticulationBranches);
+        
+                
+        //CE handle coalescent rates
+                
+        //let us start by printing out the new network
+        ////////// AFFICHAGE DU RESEAU (JUST FOR CHECKING)
+        
+        Log.debug.printf("Detaillons ce nouveau reseau ds AddReticulation !!!\n");//CE
+        for (NetworkNode node: speciesNetwork.getAllNodes()) {
+   	     Log.debug.printf("Je suis le noeud d id" + node.getNr() + "\n");//CE
+   	     Log.debug.printf("Mon nom est" + node.getLabel() + "\n"); 
+   	     final Integer BranchNumber = node.gammaBranchNumber;
+   	     Log.debug.printf("voici ma branche gamma" + node.gammaBranchNumber + "\n");//CE   
+   	     Log.debug.printf("voici ma hauteur" + node.getHeight() + "\n");
+   	     
+   	     	Log.debug.printf("J ai" + node.getParents().size() + "parents \n");
+   	     	for (NetworkNode nodeParent: node.getParents()){
+   	     		Log.debug.printf("Je suis le parent id" + nodeParent.getNr() + "\n");//CE
+   	     		Log.debug.printf("Mon nom est" + nodeParent.getLabel() + "\n"); 	
+   	     		
+   	     		/// je suis lie a machin par la branche ...
+   	     		if (node.getParentByBranch(node.gammaBranchNumber).getNr()== nodeParent.getNr()) {
+   	     		 Log.debug.printf("Et c est moi le parent lie par la branche gamma\n");	     			
+   	     		};
+   	     		
+   	     		
+   	     	}
+   	     	
+   	     	Log.debug.printf("Sinon, J ai" + node.getChildCount() + "enfants \n");
+	     	for (NetworkNode nodeChild: node.getChildren()){
+	     		Log.debug.printf("Je suis l enfant id" + nodeChild.getNr() + "\n");//CE
+	     		Log.debug.printf("Mon nom est" + nodeChild.getLabel() + "\n"); 	     		
+	     	}
+   	     
+   	     
+   	 	}
+        /////  END AFFICHAGE                        
+        
+        //CE        
+        coalescenceRate.getStored();    
+        //END CE
+		
+        Double[] values = new Double[speciesNetwork.getBranchCount()]; 		
+                      
+    	//be careful : the speciation nodes and their branches have the same numbers except the new speciation node
+   	 
+        Log.debug.printf("J'ai anciennement " +  coalescenceRateValues.length + "colaescence rates values");
+        
+        
+        for (NetworkNode node: speciesNetwork.getLeafNodes()) {
+        	int BranchNumber = node.gammaBranchNumber;  
+        	values[BranchNumber] = new Double(coalescenceRateValues[BranchNumber]); 
+        }
+        
+        
+        Log.debug.printf("Je passe dans getSpeciationNodes");
+        
+     	for (NetworkNode node: speciesNetwork.getSpeciationNodes()) {
+    	   	     
+    	   	     int BranchNumber = node.gammaBranchNumber;   	   	     
+    	   	     //Log.debug.printf("Je traite la branche numero" +  BranchNumber + "\n");
+    	   	     
+    	   	     
+    	   	     if (BranchNumber!=(speciesNetwork.getReticulationOffset()-1)) {
+    	   	    	 //handle an old speciation node 
+    	   	    	 //so the branch number did not change between the new and the old network
+    	   	    	 values[BranchNumber] = new Double(coalescenceRateValues[BranchNumber]);   
+    	   	     }else {
+    	   	    	//handle the new branch above the new speciation node
+    	   	    	 //we set the same value as coalescentrate as the branch above the speciation child of node 
+    	   	    	int branchFirstChild=node.childBranchNumbers.get(0);
+    	   	        int branchSecondChild=node.childBranchNumbers.get(1);  	   
+    	   	        
+    	   	    	NetworkNode node1=node.getChildByBranch(branchFirstChild);
+    	   	    	NetworkNode node2=node.getChildByBranch(branchSecondChild);
+    	   	    	int idFirstChild=node1.getNr();
+    	   	        int idSecondChild=node2.getNr();
+    	   	        
+    	   	        if (idFirstChild != idSecondChild) {
+    	   	        // we picked two different branches for adding the reticulate node and the new speciation node
+    	   	        	
+    	   	        	if (!(node1.isReticulation() & node2.isReticulation())){
+    	   	        	// one child is a speciation, the other one a reticulate node
+    	   	        	int branchSpeciation= node1.isSpeciation() ? branchFirstChild: branchSecondChild;
+    	   	        	//Log.debug.printf("Voila la valeur de la branche Speciation" +  branchSpeciation + "\n");
+    	   	        	values[BranchNumber] = new Double(coalescenceRateValues[branchSpeciation]);   	   	    	
+    	   	        	//since branchSpeciation has the same number in the old network 
+    	   	        	
+    	   	        	}else {
+    	   	        	// both children are reticulate nodes, yes it can happen !!!
+    	   	        		
+    	   	        		int branchOldRetic = (idFirstChild > idSecondChild) ? branchFirstChild : branchSecondChild;  	   	        		
+    	   	        		values[BranchNumber] = new Double(coalescenceRateValues[branchOldRetic-3]);  
+    	   	        		//branchOldRetic in the new network had the number branchOldRetic-3 in the old network
+    	   	        	}
+    	   	        
+   	   	        
+    	   	        }else {
+    	   	        // we picked the same branches for adding the reticulate node and the new speciation node
+    	   	        	
+    	   	        	Log.debug.printf("We picked the same branches for adding reticulate node\n");
+    	   	        	Log.debug.printf("voila le numero de node" + node.getNr() +"\n");
+    	   	        	NetworkNode Child=node.getChildByBranch(branchFirstChild);
+    	   	        	
+    	   	        	Log.debug.printf("voila le numero de child" + Child.getNr() +"\n");
+    	   	        	
+    	   	        	int branchChildOfChild=Child.childBranchNumbers.get(0);
+    	   	        	Log.debug.printf("voila le numero de branchChildOfChild" + branchChildOfChild +"\n");
+    	   	        	Log.debug.printf("voila la taille de coalescenceRateValues" + coalescenceRateValues.length +"\n");
+    	   	        	
+    	   	        	
+    	   	        	Log.debug.printf("voila la taille de Values" + values.length +"\n");
+    	   	        	Log.debug.printf("voila BranchNumber" + BranchNumber +"\n");
+    	   	        	
+    	   	        	
+    	   	        	if (Child.getChildByBranch(branchChildOfChild).isReticulation()) {
+    	   	        		//child of child is a reticulate node
+    	   	        		values[BranchNumber] = new Double(coalescenceRateValues[BranchNumber]); 
+    	   	        	}else {
+    	   	        	//child of child is a speciation node or a leaf
+    	   	        		values[BranchNumber] = new Double(coalescenceRateValues[branchChildOfChild]);   	   	        		
+    	   	        	}
+    	  	        	
+    	   	        	 
+    	   	        }
+    	   	    	   	   	    	
+    	   	     }
+    	   	    	   	   	      	   	    	 
+    	 }
+     	//it is okay since the new speciation node is the last speciation node, ie with the highest number
+     	 
+     	
+     	
+     	Log.debug.printf("Je passe dans getReticulationNodes\n");
+     	
+     	//handle now branches above retic nodes 
+     	for (NetworkNode node: speciesNetwork.getReticulationNodes()) {
+     	
+     		int BranchNumber = node.gammaBranchNumber;  
+     		     		
+     		if (node.getNr()!=speciesNetwork.getReticulationOffset()) {
+     			//handle an old retic node
+     			values[BranchNumber] = new Double(coalescenceRateValues[BranchNumber-3]);
+     			values[BranchNumber+1] = new Double(coalescenceRateValues[BranchNumber-2]);
+     		}else {
+     			     			
+     			//handle the new retic node   	
+     			Log.debug.printf("Je suis le nouveau noeud de reticulation, mon id est" + node.getNr() +"\n");
+     			int branchChild=node.childBranchNumbers.get(0);
+     			Log.debug.printf("Ma branche fille est d id" + branchChild +"\n");
+     			//branchChild keep the same number
+     			
+     			if (!node.getChildByBranch(branchChild).isReticulation()) {
+     			    //the children of node is a speciation node
+     				//so the brancChild remained the same between the old and the new network
+     				values[BranchNumber] = new Double(coalescenceRateValues[branchChild]);
+     				values[BranchNumber+1] = new Double(coalescenceRateValues[branchChild]);   			
+     			
+     			} else {
+     				//the children of node is a reticulation
+     				// so the branchCHild has changed between the old and the new network
+     				values[BranchNumber] = new Double(coalescenceRateValues[branchChild-3]);
+     				values[BranchNumber+1] = new Double(coalescenceRateValues[branchChild-3]);    				
+     				
+     			}
+     			
+     		}
+     		  		     		
+     	}	
+     		   	     
+        
+        //just for check
+    	Log.debug.printf("Je suis juste avant init by name\n");
+    	coalescenceRate.getStored();
+        //just for check
+        
+    	//try something
+    	Log.debug.printf("Voici la dimension de coalescenceRate" + coalescenceRate.getDimension()  + "\n");
+    	
+    	//start editing coalescenceRate
+    	coalescenceRate.startEditing(this);
+    	
+    	coalescenceRate.setDimension(values.length);
+    	
+    	for (int i=0; i< values.length; i++) {
+    		coalescenceRate.setValue(i, values[i]);    		
+    	}    	
+    	//end try something
+              
+    	//just for check
+    	Log.debug.printf("Je suis quasiment a la fin du proposal\n");
+    	coalescenceRate.getStored();
+        //just for check
+    	
+    	//END CE
+        
+    	Log.debug.printf("Voici le logProposalRatio" + logProposalRatio +"\n");
+        return logProposalRatio;
+        
+    }
+}

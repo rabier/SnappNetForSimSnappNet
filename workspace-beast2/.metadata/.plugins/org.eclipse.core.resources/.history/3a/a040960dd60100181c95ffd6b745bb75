@@ -1,0 +1,958 @@
+
+/*
+ * File SnAPTreeLikelihood.java
+ *
+ * Copyright (C) 2010 Remco Bouckaert, David Bryant remco@cs.auckland.ac.nz
+ *
+ * This file is part of SnAP.
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership and licensing.
+ *
+ * SnAP is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ *  SnAP is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with SnAP; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+ * Boston, MA  02110-1301  USA
+ */
+
+package speciesnetwork;
+
+
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
+
+import com.google.common.collect.Multiset;
+import com.sun.xml.internal.bind.v2.runtime.reflect.ListIterator;
+
+import beast.app.BeastMCMC;
+import beast.core.Citation;
+import beast.core.Description;
+import beast.core.Distribution;
+import beast.core.Input;
+import beast.core.State;
+import beast.core.Input.Validate;
+import beast.core.parameter.IntegerParameter;
+import beast.core.parameter.RealParameter;
+import beast.evolution.alignment.Alignment;
+import beast.evolution.alignment.Sequence;
+import beast.evolution.alignment.TaxonSet;
+import beast.evolution.branchratemodel.StrictClockModel;
+import beast.evolution.likelihood.TreeLikelihood;
+import beast.evolution.sitemodel.SiteModel;
+import beast.evolution.tree.TreeInterface;
+//import snap.Data;
+//import snap.NodeData;
+//import snap.likelihood.SnAPLikelihoodCore;
+import beast.util.Randomizer;
+
+
+@Description("Implements a tree Likelihood Function for Single Site Sorted-sequences on a tree.") 
+
+@Citation(value="David Bryant, Remco Bouckaert, Joseph Felsenstein, Noah Rosenberg, Arindam RoyChoudhury. Inferring Species Trees Directly from Biallelic Genetic Markers: Bypassing Gene Trees in a Full Coalescent Analysis. Mol. Biol. Evol. 29(8):1917-1932, 2012", 
+	DOI="10.1016/j.ympev.2011.10.01")
+public class SimpleSnAPTreeLikelihood extends Distribution {
+	public Input<SnapData> m_pDataInput = new Input<SnapData>("data", "set of alignments");
+//	public Input<Tree> m_pTree = new Input<Tree>("tree", "tree with phylogenetic relations");
+	public final Input<Network> speciesNetworkInput =
+            new Input<>("speciesNetwork", "The species network.", Validate.REQUIRED);
+	
+	public Input<RealParameter> m_pU = new Input<RealParameter>("mutationRateU", "Instantaneous rate of mutating from the 0 allele to the 1 alelle");
+	public Input<RealParameter> m_pV = new Input<RealParameter>("mutationRateV", "Instantaneous rate of mutating from the 1 allele to the 0 alelle");
+	public Input<RealParameter> m_pCoalescenceRate = new Input<RealParameter>("coalescenceRate", "population size parameter with one value for each node in the tree");
+	
+	
+	//public SimpleSnAPTreeLikelihood() throws Exception {
+		// suppress some validation rules
+		//siteModelInput.setRule(Validate.OPTIONAL);
+	//}
+	
+   
+	
+	
+	/**
+     * Calculate the log likelihood of the current state.
+     *
+     * @return the log likelihood.
+	 * @throws Exception 
+     */
+    @Override
+    public double calculateLogP() {
+    	
+	    //CE
+	    System.out.println("Je  passe dans calculateLogP de SimpleSnapTreeLikelihood.java\n");
+	    //END CE;    		
+	   
+
+        final Network speciesNetwork = speciesNetworkInput.get();
+        SanityChecks.checkNetworkSanity(speciesNetwork.getOrigin()); // species network should not be insane      
+        final int speciesBranchCount = speciesNetwork.getBranchCount();
+        System.out.println("Mon reseau contient "+ speciesBranchCount+ " branches\n");
+        
+        //affichons le nom des especes du reseau
+        final NetworkNode[] leafOfNetwork=speciesNetwork.getLeafNodes();
+        
+        for (int j = 0; j < leafOfNetwork.length; j++) { 
+        System.out.println("Voici la feuille numero " + j + " de mon reseau "+ leafOfNetwork[j].getLabel() +"\n");
+        }
+        
+        //gerons les theta
+        Double[] thetaValues = new Double[speciesNetwork.getBranchCount()];        
+        for (int j = 0; j < speciesNetwork.getBranchCount(); j++) { 
+        	thetaValues[j] =  Randomizer.nextDouble() ;        	 
+        	System.out.println("pour la branche "+ j + " Voici la valeur de theta " + thetaValues[j] + "\n");
+        }                        
+        //end theta...
+        
+        
+        //////////
+        System.out.printf("Detaillons ce reseau\n");//CE
+        for (NetworkNode node: speciesNetwork.getAllNodes()) {
+   	     System.out.printf("Je suis le noeud d id" + node.getNr() + "\n");//CE
+   	     System.out.printf("Mon nom est" + node.getLabel() + "\n"); 
+   	     final Integer BranchNumber = node.gammaBranchNumber;
+   	     System.out.printf("voici ma branche gamma" + node.gammaBranchNumber + "\n");//CE   	     
+   	 	}
+        /////  
+                
+        
+        // Handle snap data now !!!        
+        final SnapData m_pData = m_pDataInput.get();
+        System.out.println("J ai recupere mes donnees!!!\n");
+        System.out.println("voila le nombre de taxon!!!"+ m_pData.getTaxonCount() +"\n");
+        System.out.println("voila les noms des taxons !!!"+ m_pData.getTaxaNames()+ "\n");
+        
+        System.out.println("voila le nombre de taxon sets!!!"+ m_pData.m_taxonsets.get().size() +"\n");
+        System.out.println("Le premier taxon set est "+ m_pData.m_taxonsets.get() +"\n");
+        
+        List<TaxonSet> m_taxonsets=m_pData.m_taxonsets.get();
+        
+        System.out.println("Le premier taxon set est "+  m_taxonsets.get(0)+"\n");
+        System.out.println("Le nombre de taxon dans ce set est "+  m_taxonsets.get(0).getTaxonCount() +"\n");
+        System.out.println("Les noms des taxons sont "+  m_taxonsets.get(0).getTaxaNames() +"\n");
+        
+        System.out.println("Le deuxieme taxon set est "+  m_taxonsets.get(1)+"\n");
+        System.out.println("Le nombre de taxon dans ce set est "+  m_taxonsets.get(1).getTaxonCount() +"\n");
+        System.out.println("Le troisieme taxon set est "+  m_taxonsets.get(2)+"\n");
+        System.out.println("Le nombre de taxon dans ce set est "+  m_taxonsets.get(2).getTaxonCount() +"\n");
+        
+        for (int k = 0; k < m_pData.getTaxonCount(); k++) { 
+        	
+        	System.out.println("Le " +k+ "eme taxon set est "+  m_taxonsets.get(k)+"\n");
+        	System.out.println("Le Nom du set est "+ m_taxonsets.get(k).getID());
+        	
+        	for (int j = 0; j < m_taxonsets.get(k).getTaxonCount(); j++) { 
+        		System.out.println("Le " +j+ " eme taxa du set est "+  m_taxonsets.get(k).getTaxonId(j) +"\n");
+      		
+        	}
+        	        	
+        }
+        
+        System.out.println("Decrivons les sequences desormais !!!\n");        
+       
+        List<Sequence> sequences = m_pData.sequenceInput.get();
+        
+        
+        //List<Sequence> sequences = m_pData.m_rawData.getTaxaNames();
+        
+        System.out.println("Voici les noms de mes taxons " + m_pData.m_rawData.get().getTaxaNames() + "\n");
+        System.out.println("Voici les nombre de taxons " + m_pData.m_rawData.get().getTaxonCount() + "\n");
+        System.out.println("Voici les noms des taxons " + m_pData.m_rawData.get().getTaxaNames() + "\n");
+        
+        
+        for (int j = 0; j < m_pData.m_rawData.get().getTaxonCount() ; j++) { 
+        	System.out.println("Voici la sequence du " + j + " eme taxa" + m_pData.m_rawData.get().getSequenceAsString(m_pData.m_rawData.get().getTaxaNames().get(j))+ "\n"); 		
+    	}
+        
+        //System.out.println("Voici la sequence du premier taxa" + m_pData.m_rawData.get().getSequenceAsString(m_pData.m_rawData.get().getTaxaNames().get(0))+ "\n");
+        //System.out.println("Voici la sequence du premier taxa" + m_pData.m_rawData.get().getSequenceAsString(m_pData.m_rawData.get().getTaxaNames().get(1))+ "\n");
+       
+		
+        
+        //List<Sequence> SNPsequences = sequenceInput.get();        
+        
+        System.out.println("Voici la taille de ma liste de sequences " + sequences.size() + "\n");
+        
+        //System.out.println("Decrivons la premiere sequence du taxon " + sequences.get(0).getTaxon() + "\n");
+		//System.out.println("Decrivons la premiere sequence du taxon " + sequences.get(0).getTaxon() + "\n");        
+		
+		//System.out.println("La voici !!! " + sequences.get(0).getData() + "\n");        		
+            
+        
+        // jen suis ici !!!
+        System.out.println("Voici les sequences modifiees en entree pour SNAP\n");
+        System.out.println("Voici le nombre de Pattern pour les donnees SNAP" + m_pData.getPatternCount() +"\n");
+        
+        /*
+        int [] thisSite = m_pData.getPattern(0);  //count of red alleles for the site 2
+        System.out.println("Voici le nombre d alleles rouges pour le site 1" + thisSite[0] +"\n"); 
+        System.out.println("Voici le nombre d alleles rouges pour le site 1" + thisSite[1] +"\n");
+        System.out.println("Voici le nombre d alleles rouges pour le site 1" + thisSite[2] +"\n");
+        System.out.println("Reecrivons la meme chose\n"); 
+        System.out.println("Voici le nombre d alleles rouges pour le site 1" + m_pData.getPattern(0)[0] +"\n");
+        System.out.println("Voici le nombre d alleles rouges pour le site 1" + m_pData.getPattern(0)[1] +"\n");
+        System.out.println("Voici le nombre d alleles rouges pour le site 1" + m_pData.getPattern(0)[2] +"\n");
+        
+        System.out.println("Voici le nombre de sites" + m_pData.getSiteCount()+ "\n");
+        */
+        
+        System.out.println("Recapitulons le tout !\n");        
+        for (int i = 0; i < m_pData.getPatternCount(); i++) {
+        	for (int j = 0; j < m_pData.getNrTaxa(); j++) {
+        		System.out.println("Voici le nombre d alleles rouges pour le site " + i +" et le " +j +" eme taxon " + m_pData.getPattern(i)[j] +"\n");       
+        	}
+        }
+        		
+        		
+        
+        //SNPsequences.add(SNPSequence);
+        /*
+        System.out.println("Voici les sequences modifiees en entree pour SNAP" + m_pData.getPatternLineagCounts(0)[0] +"\n"); 
+        System.out.println("Voici les sequences modifiees en entree pour SNAP" + m_pData.getPatternLineagCounts(0)[1] +"\n");   
+        System.out.println("Voici les sequences modifiees en entree pour SNAP" + m_pData.getPatternLineagCounts(0)[2] +"\n");
+        System.out.println("Voici les sequences modifiees en entree pour SNAP" + m_pData.getPatternLineagCounts(1)[0] +"\n");
+        System.out.println("Voici les sequences modifiees en entree pour SNAP" + m_pData.getPatternLineagCounts(1)[1] +"\n");   
+        System.out.println("Voici les sequences modifiees en entree pour SNAP" + m_pData.getPatternLineagCounts(1)[2] +"\n");
+        System.out.println("Voici les sequences modifiees en entree pour SNAP" + m_pData.getPatternLineagCounts(2)[0] +"\n");
+        System.out.println("Voici les sequences modifiees en entree pour SNAP" + m_pData.getPatternLineagCounts(2)[1] +"\n");   
+        System.out.println("Voici les sequences modifiees en entree pour SNAP" + m_pData.getPatternLineagCounts(2)[2] +"\n");
+        */
+       // System.out.println("Voici les sequences modifiees en entree pour SNAP" + m_pData.getPatternLineagCounts(1) +"\n"); 
+        //m_pData.m_nPatternLineageCounts
+        
+        //m_pData.getTaxonCount();
+        //SNPsequences
+        //m_pData.SNPsequences;
+        
+        
+        //try to handle substitution rates
+        //m_siteModel = (SiteModel.Base) siteModelInput.get();
+        //m_substitutionmodel = ((SnapSupublic Input<RealParameter> m_pCoalescenceRate = new Input<RealParameter>("coalescenceRate", "population size parameter with one value for each node in the tree");
+
+        double u = m_pU.get().getValue();
+        double v = m_pV.get().getValue();
+        System.out.println("Voici le mutation rate u pour snap " + u + "\n");
+        System.out.println("Voici le mutation rate v pour snap " + v + "\n");
+
+        
+        double gamma = m_pCoalescenceRate.get().getValue();
+        System.out.println("Voici le gamma recu en entree " + gamma + "\n");
+        
+        
+        System.out.println("Initialisation des feuilles pour la FMatrix \n");
+      //essayons l initialisation des feuilles 
+    	FMatrix tmpForLeaf=new FMatrix(m_taxonsets.get(0).getTaxonCount(),m_pData.getPattern(0)[0]);
+    	System.out.println("tmpForLeaf correspond a " + tmpForLeaf + "\n");
+      //end essayons		
+    	
+    	
+    	//essayons l initialisation automatique de ttes les feuilles pour le site 0
+              
+        final FMatrix[] MyFMatrixLeaves= new FMatrix[leafOfNetwork.length];
+        for (int j = 0; j < leafOfNetwork.length; j++) { 
+        	MyFMatrixLeaves[j]=new FMatrix(m_taxonsets.get(j).getTaxonCount(),m_pData.getPattern(0)[j]);
+            System.out.println("la F Matrix de la " + j + " eme feuille  correspond a " + MyFMatrixLeaves[j] + "\n");     	
+            }       
+      //end essayons
+        
+        
+      //essayons l initialisation automatique de ttes les feuilles pour le site 1 
+        final FMatrix[] MyFMatrixLeavesSite1= new FMatrix[leafOfNetwork.length];
+        for (int j = 0; j < leafOfNetwork.length; j++) { 
+        	MyFMatrixLeavesSite1[j]=new FMatrix(m_taxonsets.get(j).getTaxonCount(),m_pData.getPattern(1)[j]);
+            System.out.println("la F Matrix Site 1 de la " + j + " eme feuille  correspond a " + MyFMatrixLeavesSite1[j] + "\n");     	
+            }            
+      //end essayons
+        
+        
+       //essayons l intialisation de la FMatrix au niveau d un noeud intpublic Input<RealParameter> m_pCoalescenceRate = new Input<RealParameter>("coalescenceRate", "population size parameter with one value for each node in the tree");
+    	//erne
+        //final NetworkNode[] listSpeciation=new NetworkNode[speciesNetwork.getSpeciationNodeCount()];
+        //listSpeciation=speciesNetwork.getSpeciationNodes();       		
+        NetworkNode[] listSpeciation=speciesNetwork.getSpeciationNodes();    
+        System.out.println("Mon deuxieme noeud de speciation est " + listSpeciation[1].getLabel() + "\n");
+        FMatrix[] MyFMatrixSpeciationsSite1= new FMatrix[listSpeciation.length];
+        MyFMatrixSpeciationsSite1[1]=new FMatrix(m_taxonsets.get(0).getTaxonCount()+m_taxonsets.get(1).getTaxonCount(),m_pData.getPattern(0)[0]);
+        System.out.println("la F Matrix Site 1 de ce noued de speciation  correspond a " + MyFMatrixSpeciationsSite1[1] + "\n");       
+        //end essayons
+        
+        
+        
+        logP = 0.0;
+        
+        //CE cela marchait avant de passer au FMatrixAugmented. Mais c est tjs interessant. KEEP IT  
+        /*
+        for (int i = 0; i < speciesBranchCount; i++) { // for each species network branch "i"                
+        	//logP += 2;
+        	System.out.println("Je suis la branche"+ i+ "\n");        	
+        	
+        	//essayons un 
+        	FMatrix tmp2=new FMatrix(4,2);
+        	try {
+        		
+        		System.out.println("tmp2 correspond a " + tmp2 + "\n");
+        		System.out.println("tmp2 est de taille " + tmp2.getSize() + "\n");
+				FMatrix tmp = MatrixExponentiator.expQTtx(4, 1, 1, 0.2, 0.2, tmp2);
+				System.out.println("J ai ecrit MatrixExponentiator!!!\n");
+				System.out.println("tmp est de taille" + tmp + "\n");
+				System.out.println("tmp est de taille" + tmp.getSize() + "\n");
+				
+				System.out.println("j accede a tmp 4 2 " + tmp.get(4,2) + "\n");				
+				
+				System.out.println("J accede a tmp 1 0 " + tmp.get(1,0) + "\n");
+				System.out.println("J accede a tmp 1 1 " + tmp.get(1,1) + "\n");
+				System.out.println("J accede a tmp 2 0 " + tmp.get(2,0) + "\n");
+				System.out.println("J ai fini le MatrixExponentiator pour cette branche\n");				
+				
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+        	//
+        	        	       	
+        }	
+        */
+        //END CE cela marchait
+        
+        
+        //DECLARATION
+        
+        // From here I try to handle FMatrixAugmented        
+        FMatrixAugmented[] TableFMatAugmented = new FMatrixAugmented[speciesNetwork.getBranchCount()];        
+        for (int j = 0; j < speciesNetwork.getBranchCount(); j++) { 
+        	//FMatrixAugmented myFMatrixAugmented= new FMatrixAugmented();
+        	//TableFMatAugmented[j]=myFMatrixAugmented;
+        	TableFMatAugmented[j]= new FMatrixAugmented();
+        	System.out.println("J ai fini le FMatrixAugmented pour cette branche\n");		
+        }
+        
+        
+        
+        
+                
+        // ********************* STEP 1 *****************************************
+        //Initialize Liste of Nodes Ready to Be treated 
+       // i.e. only the leaves are ready to be treated !!!        
+        ArrayList <NetworkNode>  NetworkNodesReadyToBeTreated = new ArrayList <NetworkNode>();
+        final NetworkNode[] NetworkLeaves=speciesNetwork.getLeafNodes(); 
+        for (int j = 0; j < NetworkLeaves.length; j++) { 
+        NetworkNodesReadyToBeTreated.add(NetworkLeaves[j]);
+        }        
+        System.out.println("Voici ma liste de noeuds ready to be treated\n");	
+        
+        java.util.ListIterator<NetworkNode> itReady = NetworkNodesReadyToBeTreated.listIterator() ;
+        while(itReady.hasNext()) {
+        	NetworkNode element = itReady.next() ;
+        	System.out.println(element.getLabel() +" ");
+        }
+        System.out.println("\n");
+        
+        //Initialize Liste of Nodes Not Ready to Be treated 
+        // i.e. all the internal nodes are Not ready to be treated !!!     
+        ArrayList <NetworkNode>  NetworkNodesNotReadyToBeTreated = new ArrayList <NetworkNode>();
+        final NetworkNode[] NetworkInternalNodes=speciesNetwork.getInternalNodes(); 
+        for (int j = 0; j < NetworkInternalNodes.length; j++) { 
+            NetworkNodesNotReadyToBeTreated.add(NetworkInternalNodes[j]);
+            }         
+        System.out.println("Voici ma liste de noeuds NOT ready to be treated\n");	
+             
+        java.util.ListIterator<NetworkNode> itNotReady = NetworkNodesNotReadyToBeTreated.listIterator() ;
+        
+        NetworkNode element;
+        while(itNotReady.hasNext()) {             
+        	element = itNotReady.next() ;
+        	System.out.println(element.getLabel() +" ");
+        }
+        System.out.println("\n");
+       
+       
+        
+     // *********************END STEP 1 *****************************************
+        
+    
+      // ******************** STEP2 ***************************************
+
+        System.out.println("STEP 2!!!\n");	
+        
+        
+        //Initialize FMatrixAugmented for the leaves of the network   
+        //since leaves are ready to be treated
+        // Note that at this time we are at the Bottom B of those branches 
+        for (int j = 0; j < NetworkLeaves.length; j++) { 
+        	/*
+        	FMatrixAugmented myFMatrixAugmented= new FMatrixAugmented(m_taxonsets.get(j).getTaxonCount(),m_pData.getPattern(0)[j]);  
+        	System.out.println("Voici le numero de la branche" + NetworkLeaves[j].gammaBranchNumber + "\n");
+        	myFMatrixAugmented.addToListBranchNumbersAndLocations(NetworkLeaves[j].gammaBranchNumber,"B");        	
+        	//0 refers to the id of the site 	
+        	TableFMatAugmented[NetworkLeaves[j].gammaBranchNumber]=myFMatrixAugmented;    
+        	*/
+        	TableFMatAugmented[NetworkLeaves[j].gammaBranchNumber]= new FMatrixAugmented(m_taxonsets.get(j).getTaxonCount(),m_pData.getPattern(0)[j]);  
+        	System.out.println("Voici le numero de la branche" + NetworkLeaves[j].gammaBranchNumber + "\n");
+        	TableFMatAugmented[NetworkLeaves[j].gammaBranchNumber].addToListBranchNumbersAndLocations(NetworkLeaves[j].gammaBranchNumber,"B");            	
+        	System.out.println("Voici les branches associes a ma FMatrixAugmented " + TableFMatAugmented[NetworkLeaves[j].gammaBranchNumber].branchNumbers + "\n");
+        	System.out.println("Voici les locations associes a ma FMatrixAugmented " + TableFMatAugmented[NetworkLeaves[j].gammaBranchNumber].branchLocations + "\n");
+        	System.out.println("Voici le nombre max de lineages associes a ma FMatrixAugmented " + TableFMatAugmented[NetworkLeaves[j].gammaBranchNumber].m_n_MultiDim + "\n");
+        	System.out.println("Voici la taille de ma matrice F associee a ma FMatrixAugmented " + TableFMatAugmented[NetworkLeaves[j].gammaBranchNumber].F.length+ "\n");
+        	System.out.println("Voici la mat F " + TableFMatAugmented[NetworkLeaves[j].gammaBranchNumber] + "\n");
+   
+        
+        }                
+        
+        System.out.println("Let us go to TOP for leaves !!!\n");
+    	// let s move to the Top on those branches          
+        //So let us update FMatrixAugmented for the leaves by going at the top of their branches
+        for (int j = 0; j < NetworkLeaves.length; j++) {         	
+        	//0 refers to the id of the site 	
+        	try { 
+        		//NetworkNode Parent = NetworkLeaves[j].getParentByBranch(NetworkLeaves[j].gammaBranchNumber);	
+        		//FMatrixAugmented KK= MatrixExponentiatorMultiDim.expQTtxUniDim(TableFMatAugmented[NetworkLeaves[j].gammaBranchNumber].getSizeMultidDim().get(0), u, v, gamma, Parent.getHeight(), TableFMatAugmented[NetworkLeaves[j].gammaBranchNumber],0);
+		//	TableFMatAugmented[NetworkLeaves[j].gammaBranchNumber]= MatrixExponentiatorMultiDim.expQTtxUniDim(TableFMatAugmented[NetworkLeaves[j].gammaBranchNumber].getSizeMultidDim().get(0), u, v, gamma, Parent.getHeight(), TableFMatAugmented[NetworkLeaves[j].gammaBranchNumber],0);
+				
+				double heightBranch=NetworkLeaves[j].getParentByBranch(NetworkLeaves[j].gammaBranchNumber).getHeight();        		
+        		TableFMatAugmented[NetworkLeaves[j].gammaBranchNumber].goToTopUniDim(u, v, gamma, heightBranch);
+        		
+        		
+				System.out.printf("Je gere la  TableFMatAugmented dela branche numero " + NetworkLeaves[j].gammaBranchNumber + "\n"); 				
+				System.out.printf("la hauteur de ma branche feuille est " + heightBranch + "\n");
+				System.out.println("Voici les branches associes a ma FMatrixAugmented " + TableFMatAugmented[NetworkLeaves[j].gammaBranchNumber].branchNumbers + "\n");
+				System.out.println("Voici les locations associes a ma FMatrixAugmented " + TableFMatAugmented[NetworkLeaves[j].gammaBranchNumber].branchLocations + "\n");
+				System.out.println("Voici le FTop " + TableFMatAugmented[NetworkLeaves[j].gammaBranchNumber] + "\n");
+				System.out.println("Voici le nombre max de lineages associes a ma FMatrixAugmented " + TableFMatAugmented[NetworkLeaves[j].gammaBranchNumber].m_n_MultiDim + "\n");
+	        	System.out.println("Voici la taille de ma matrice F associee a ma FMatrixAugmented " + TableFMatAugmented[NetworkLeaves[j].gammaBranchNumber].F.length+ "\n");	        	
+				
+	        	//try to print it !!!
+	        	double [] theFTop=TableFMatAugmented[NetworkLeaves[j].gammaBranchNumber].getF();
+	        	for (int k = 0; k < theFTop.length; k++) { 
+	        		System.out.println("Voici la taille de ma matrice F associee a ma FMatrixAugmented " + theFTop[k]+ "\n");	        	
+	        	}
+	        	
+	        	
+        	} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			};    	
+        }     
+                  
+        //remove the leaves from the list of nodes ready to be treated
+        for (int k = 0; k < NetworkLeaves.length; k++) {
+        	NetworkNodesReadyToBeTreated.remove(NetworkLeaves[k]);        
+        }
+        
+        // *********************END STEP 2 (at this time Fmatrices are at top for leaf branches) *****************************************
+         
+
+        // ******************** STEP3 ***************************************
+        //insert internal nodes whose children are leaves, into the list NetworkNodesReadyToBeTreated   
+        
+        System.out.println("STEP 3!!!\n");	
+        //NetworkNode[] NetworkInternalNodes=speciesNetwork.getInternalNodes();; 
+        int countChildLeaves;
+    	int count;        
+    	Multiset<NetworkNode> children;
+        for (int j = 0; j < NetworkInternalNodes.length; j++) {                 	       	        	
+        	//Multiset<NetworkNode> children=NetworkSpeciationNodes[j].getChildren(); 
+        	children=NetworkInternalNodes[j].getChildren(); 
+        	countChildLeaves=0;
+        	count=0;
+        	for (NetworkNode n: children) {        		
+        		count = n.isLeaf() ? 1 : 0;       		
+        		countChildLeaves=countChildLeaves + count;        		
+        	}        		
+        	System.out.println("Je suis le noeud" + NetworkInternalNodes[j].getLabel() + "\n");	
+        	System.out.println("J ai" + countChildLeaves + "enfants qui sont des feuilles parmi mes " + children.size() +"enfants\n"); 	        	
+        	if ( countChildLeaves==children.size() ) {
+        		//the speciation node is ready to be treated
+        		NetworkNodesReadyToBeTreated.add(NetworkInternalNodes[j]);       		
+        		//remove this node from the list NetworkNodesNotReadyToBeTreated
+        		
+        		System.out.println("Je suis  pret a etre traite\n");
+        		System.out.println("Dans NetworkNodesNotReadyToBeTreated, voici la position du noeud "+ NetworkInternalNodes[j].getLabel()+ " que"
+        				+ "je dois enlever" + NetworkNodesNotReadyToBeTreated.indexOf(NetworkInternalNodes[j]) + "\n"); 
+        		//NetworkNodesNotReadyToBeTreated.remove(NetworkNodesNotReadyToBeTreated.indexOf(NetworkSpeciationNodes[j]));
+        		NetworkNodesNotReadyToBeTreated.remove(NetworkInternalNodes[j]);
+        	} else {
+        		System.out.println("Je suis pas pret a etre traite\n");
+        		System.out.println("Pour information, Dans NetworkNodesNotReadyToBeTreated, je suis le noeud "+ NetworkInternalNodes[j].getLabel()+ " que"
+        				+ "place en" + NetworkNodesNotReadyToBeTreated.indexOf(NetworkInternalNodes[j]) + "eme position\n"); 
+        		        		        		
+        	}
+        	        	
+        } 	        	
+              
+        
+        //let us print the	NetworkNodesReadyToBeTreated
+        System.out.println("Voici ma liste de noeuds ready to be treated pouvant contenir desormais des speciation nodes !!!\n");	       
+        itReady = NetworkNodesReadyToBeTreated.listIterator() ;
+        NetworkNode myNodeReady;
+        while(itReady.hasNext()) {
+        	myNodeReady = itReady.next() ;
+        	System.out.println(myNodeReady.getLabel() +" ");
+        }
+        System.out.println("\n");
+        System.out.println("Fin de l affichage de la liste !!!!!!\n");	
+        
+        
+      //let us print the NetworkNodesNotReadyToBeTreated
+        System.out.println("Voici ma liste de noeuds not ready to be treated  !!!\n");	
+        
+        itNotReady = NetworkNodesNotReadyToBeTreated.listIterator() ;      
+        while(itNotReady.hasNext()) {
+        	element = itNotReady.next() ;
+        	System.out.println(element.getLabel() +" ");
+        }
+        System.out.println("\n");
+        System.out.println("Fin de laffichage de la liste !!!!!!\n");	        
+        System.out.println("Fin STEP 3 !!!\n");	 
+        
+               
+        
+        // ******************** END STEP3 ***************************************
+        
+        
+        
+        // ******************** STEP4 ***************************************
+        //Let us deal with different cases        
+        // Case (3*), i.e. Handle Reticulation node
+                
+        System.out.println(" STEP 4 !!!\n");
+                
+        java.util.ListIterator<NetworkNode> iteratorReady = NetworkNodesReadyToBeTreated.listIterator() ;
+        NetworkNode nodeReady = iteratorReady.next() ;             
+        int belowReticBranchNumber=0;
+        
+        if (nodeReady.isReticulation()) {
+        	
+        	 System.out.println("Je dois traiter le cas 3*!!!!!!\n");	     	
+        	 final Integer lBranchNumber = nodeReady.gammaBranchNumber;
+        	 nodeReady.getHeight();
+        	 System.out.println("La branche que je considere est la branche numero " + nodeReady.gammaBranchNumber + "\n");
+        	  	
+        	 Multiset<NetworkNode> reticChild = nodeReady.getChildren();
+        	 
+        	 for (NetworkNode n: reticChild) {        		
+        		 //use for because of Multiset<NetworkNode> 
+         		belowReticBranchNumber = n.gammaBranchNumber;      		        		
+        	 }        
+        	         	    
+        	 //TableFMatAugmented[belowReticBranchNumber]
+        	 //computeEq3star(TableFMatAugmented[belowReticBranchNumber], );
+        	 // Let us compute Equation 3 star       	 
+        	 // initialize TableFMatAugmented for this retic node, and associate the branches above retic node to the matrix
+        	// TableFMatAugmented[lBranchNumber]= new FMatrixAugmented(m_taxonsets.get(j).getTaxonCount(),m_pData.getPattern(0)[j]); 
+        	 System.out.println("Voici les branches numbers de  TableFMatAugmented[lBranchNumber]" + TableFMatAugmented[lBranchNumber].branchNumbers + "\n");
+        	 System.out.println("Voici le champs m_n de  TableFMatAugmented[lBranchNumber]" + TableFMatAugmented[lBranchNumber].m_n+ "\n");
+        	 
+        	 
+        	 TableFMatAugmented[lBranchNumber]= new FMatrixAugmented(4,2);        	 
+        	 //TableFMatAugmented[belowReticBranchNumber].get(int n, int r);
+        	 
+        	 TableFMatAugmented[lBranchNumber].addToListBranchNumbersAndLocations(lBranchNumber,"B");    
+        	 TableFMatAugmented[lBranchNumber].addToListBranchNumbersAndLocations(lBranchNumber+1,"B");
+        	 // add branches that have to be analyzed jointly (ie Horizontal Red Line)
+        	         	 
+        	        	         	 
+        	 //let us now add the branches that had to be analyzed simultaneously with the branch belowReticBranchNumber
+        	 //warning we do not have to add the branch belowReticBranchNumber 
+        	 for (int k = 0; k < TableFMatAugmented[belowReticBranchNumber].branchNumbers.size(); k++) {        
+        		 
+        		 if (TableFMatAugmented[belowReticBranchNumber].branchNumbers.get(k)!=belowReticBranchNumber) {        		   		 
+        		 TableFMatAugmented[lBranchNumber].addToListBranchNumbersAndLocations(TableFMatAugmented[belowReticBranchNumber].branchNumbers.get(k),TableFMatAugmented[belowReticBranchNumber].branchLocations.get(k));         		        		 
+        		 }       	        	 
+        	 }
+        	
+
+        	 System.out.println("APRES AJOUT DES BRANCHES \n");
+        	 System.out.println("Voici les branches numbers de  TableFMatAugmented[lBranchNumber]" + TableFMatAugmented[lBranchNumber].branchNumbers + "\n");
+        	 
+        	 
+        	 
+        	 System.out.println("Voici la branch number" + belowReticBranchNumber + "located below le retic node!!!\n");       
+        	 System.out.println("Voici la liste des branch number associe a larete" + lBranchNumber + "located above le retic node!!!\n");  
+        	 for (int k = 0; k < TableFMatAugmented[lBranchNumber].branchNumbers.size(); k++) {        	 
+            	 System.out.println("un elt  branch number est la branch numero" + TableFMatAugmented[lBranchNumber].branchNumbers.get(k) + "\n");   
+        	 }
+        	        	 
+        	 
+        	 
+        	 
+        	 
+        	 
+        	 List<Integer> listMult=TableFMatAugmented[belowReticBranchNumber].getSizeMultidDim();
+        	 
+        	 
+        	 System.out.println("EEEEEEEEEEEEEEEEEEEEEEEEEEEEE \n");  
+        	 System.out.println("Voila la valeur des sizes pour la branche 0" + TableFMatAugmented[0].getSizeMultidDim()+ "\n");  
+        	 System.out.println("Voila la valeur des sizes pour la branche 1" + TableFMatAugmented[1].getSizeMultidDim()+ "\n");  
+        	 System.out.println("Voila la valeur des sizes pour la branche 2" + TableFMatAugmented[2].getSizeMultidDim()+ "\n");  
+        	 
+        	 
+        	 
+        	 //TableFMatAugmented[lBranchNumber].resizeMultidDim(Arrays.asList(myF1.m_n,myF2.m_n));
+        	 
+        	 
+        	 FMatrixAugmented FMatrixAugmentedBelow=TableFMatAugmented[belowReticBranchNumber];
+        	 
+        	 
+        	 int indListBelowReticBranchNumber=FMatrixAugmentedBelow.getIndex(belowReticBranchNumber);
+        	 System.out.println("Voila la valeur de indListBelowReticBranchNumber" + indListBelowReticBranchNumber + "\n");  
+        	         	 
+        	 
+        	 System.out.println("Voila la valeur de listMult" + listMult + "\n");  
+        	 
+        	 int m_n_BelowRet=FMatrixAugmentedBelow.getSizeMultidDim().get(indListBelowReticBranchNumber);	 
+
+        	 
+        	 /*
+        	 //try something with list of integer
+        	 List<Integer> n_List3=Arrays.asList(0,3,5,6,8,5,3);
+        	 System.out.println("Voila ma liste n_List3" + n_List3 + "\n");  
+        	 n_List3.add(4);
+        	 System.out.println("Voila ma liste n_List3" + n_List3 + "\n");  
+        	 n_List3.remove(4);
+        	 System.out.println("Voila ma liste n_List3 after removing 4th" + n_List3 + "\n");  
+        	 //end try something       	 
+        	 */    	 
+        	 
+        	 ArrayList <Integer>  MyListOfInteger = new ArrayList <Integer>();
+        	 MyListOfInteger.add(5);
+        	 MyListOfInteger.add(4);
+        	 MyListOfInteger.add(3);
+        	 
+        	 ArrayList <Integer>  MyListOfInteger2 = new ArrayList <Integer>();
+        	 MyListOfInteger2.add(1);
+        	 MyListOfInteger2.add(1);
+        	 
+        	 
+        	 
+        	 ArrayList <Integer>  MyListOfInteger3 = new ArrayList <Integer>();
+        	 MyListOfInteger3 = MyListOfInteger ;
+        	 System.out.println("Voila ma liste MyListOfInteger " + MyListOfInteger + "\n");
+
+        	 System.out.println("Voila ma liste MyListOfInteger3 " + MyListOfInteger3 + "\n");
+        	 MyListOfInteger.remove(0);
+        	 System.out.println("Voila ma liste MyListOfInteger after having removed something" + MyListOfInteger + "\n");
+        	 MyListOfInteger.remove(0);
+        	 
+        	 
+        	 MyListOfInteger3=MyListOfInteger2;
+        	 System.out.println("Voila ma liste MyListOfInteger2 " + MyListOfInteger2 + "\n");
+        	 System.out.println("Voila ma liste MyListOfInteger3 " + MyListOfInteger3 + "\n");
+        	 
+        	//multidm size without the size matching below retic
+        	 List<Integer> MY=new ArrayList <Integer>();
+        	 //MY=FMatrixAugmentedBelow.getSizeMultidDim();   
+        	 
+        	 MY.add(1);
+        	 MY.add(5);
+        	 MY.add(6);        	 
+        
+        	 System.out.println("Voila ma liste MY" + MY + "\n");  
+        	 System.out.println("Voila le premier element de maliste MY " + MY.get(0) + "\n"); 
+        	 
+        	 
+        	
+        	 
+        	 //int uu=1;
+        	 //MY.add(uu);
+        	 System.out.println("Voila ma liste MY after having added one element" + MY + "\n");  
+        	 MY.remove(0);
+        	 System.out.println("Voila ma liste MY after having removed first element" + MY + "\n");  
+        	 //MY.remove(3);		 
+      	 
+        	 
+        	 
+        	 /*
+        	 
+        	 //multidm size without the size matching below retic
+        	 List<Integer> MY=FMatrixAugmentedBelow.getSizeMultidDim();
+        	 System.out.println("Voila ma liste MY" + MY + "\n");  
+        	 System.out.println("Voila le premier element de maliste MY " + MY.get(0) + "\n"); 
+        	 int uu=1;
+        	 MY.add(uu);
+        	 System.out.println("Voila ma liste MY after having added one element" + MY + "\n");  
+        	 MY.remove(0);
+        	 System.out.println("Voila ma liste MY after having removed first element" + MY + "\n");  
+        	 //MY.remove(3);		 
+      	 
+        	 */
+        	         	 
+        	 
+        	 // J en suis ici !!! IL faut verifier le matExponentiatior pour le multidim...
+        	 // et le removce 3 cela ne marche pas !!!
+        	 
+        	 System.out.println("Voila ma liste MY" + MY + "\n");  
+        	 
+        	 
+        	 
+        	 
+        	 
+        	// TableFMatAugmented[lBranchNumber].resizeMultidDim(Arrays.asList(m_n_BelowRet,m_n_BelowRet), )
+        	 //since first element is leftbranchnumber, then rightbranchnumber and others....
+        
+        	 
+        	 //try something
+        	 FMatrixAugmented myF1=TableFMatAugmented[NetworkLeaves[0].gammaBranchNumber];
+        	 FMatrixAugmented myF2=TableFMatAugmented[NetworkLeaves[1].gammaBranchNumber];
+        	 System.out.println("Voici myF1 " + myF1 + "\n"); 
+        	 System.out.println("Voici myF2 " + myF2 + "\n"); 
+        	 
+        	 System.out.println("Voici le champ m_n de myF1 " + myF1.m_n + "\n");
+        	 System.out.println("Voici le champ m_n de myF2 " + myF2.m_n + "\n");
+        	 
+
+        	 double [] copy = new double[myF1.F.length + myF2.F.length];
+
+        	 System.arraycopy(myF1.F,0,copy,0,myF1.F.length);
+        	 System.arraycopy(myF2.F,0,copy,myF1.F.length,myF2.F.length);
+
+        	 System.out.println("Je suis copy et j englobe myF1 et myF2 " + copy[0]+ "\n");
+        	 System.out.println("Je suis copy et j englobe myF1 et myF2 " + copy[1]+ "\n");
+        	 System.out.println("Je suis copy et j englobe myF1 et myF2 " + copy[myF1.F.length + myF2.F.length -1]+ "\n");
+        	         	         	
+        	 
+        	 List<Integer> n_MultidDim= Arrays.asList(myF1.m_n,myF2.m_n);
+        	 List<Integer> r_MultidDim= Arrays.asList(1,1);
+        	 
+        	 
+        	 TableFMatAugmented[lBranchNumber].resizeMultiDim(Arrays.asList(myF1.m_n,myF2.m_n));
+        	 
+        	 System.out.println("Effectuons un resize multidim \n");
+        	 System.out.println("Le myF1.m_n est egal a " + myF1.m_n + "\n");
+        	 System.out.println("Le myF2.m_n est egal a " + myF2.m_n + "\n");
+        	     	         	 
+        	 TableFMatAugmented[lBranchNumber].getMultiDim(n_MultidDim, r_MultidDim);
+        	 System.out.println("OOOOOOh Voici la taille de TableFMatAugmented[lBranchNumber] qui a eu un resizeMultidim" + TableFMatAugmented[lBranchNumber].F.length+ "\n");            	 
+        	 
+        	 //end try something
+        	 
+        	 
+        	 ///Let us fill in the FMatrix
+
+        	 int n1,m1,r1,s1;
+        	 double Prob=nodeReady.inheritProb;
+        	 
+        	         	 
+        	 
+        	 //double f= java.lang.Math.pow(Prob,m1)*(1-java.lang.Math.pow(Prob,m1))*TableFMatAugmented[belowReticBranchNumber].getMultidDim(n1+m1, r1+s1);
+        	 //est-ce que below branch number is first in his list of HRLLL ??? YES OR NOT ???
+        	 
+        	 // il me faut une fonction qui me dit pour une branche number ou se trouve l indice correspondant !!!
+        	
+        	 /*
+        	 IndHRL(branch)
+        	 
+        	 
+        	 int location TableFMatAugmented[lBranchNumber].getLocationMultidDim(List<Integer> n_List, List<Integer> r_List, double f);
+        	 
+        	 TableFMatAugmented[lBranchNumber].F[location]= f;		
+        	 
+        	 
+        	 TableFMatAugmented[lBranchNumber].setMultiDim(List<Integer> n_List, List<Integer> r_List, double f);
+        	 */
+        			 
+        	 
+        	 
+        	 
+        	 
+        	 
+        	 
+        	 
+        	 
+        	 
+        	 
+        	 
+        	 //////////////////////////////////////////////////////////////////////////////////////////////
+        	 /////////////////////////////////////////////////////////////////////////////////////////
+        	 //////////////////////////////////////////////////////////////////////////////////////////////////////
+        	 
+        	 List<Integer> n_List2=Arrays.asList( 0 , 3, 5, 6, 8 ,5 , 3);
+        	 
+        	 System.out.println("Let us check the get access \n");
+        	 FMatrixAugmented TableFMatAugmentedCheck=new FMatrixAugmented();
+        	 
+        	 
+        	 List<Integer> n_List_Check= Arrays.asList(2,2);
+        	 List<Integer> r_List_Try= Arrays.asList(1,1);
+        	 
+        	 List<Integer> n_List_Try= Arrays.asList(2,1);
+        	 
+        	 TableFMatAugmentedCheck.resizeMultiDim(n_List_Check);
+        	 
+        	 System.out.println("Accedons a l element" + n_List_Try + r_List_Try +  "\n");
+        	 System.out.println("Sa position est" + n_List_Try + r_List_Try +  "\n");
+        	 TableFMatAugmentedCheck.getLocationMultidDim(n_List_Try,r_List_Try);
+        	 
+        	 
+        	 r_List_Try= Arrays.asList(0,2);        	 
+        	 n_List_Try= Arrays.asList(1,2);
+        	 
+        	 System.out.println("Accedons a  un autre element" + n_List_Try + r_List_Try +  "\n");
+        	 TableFMatAugmentedCheck.getLocationMultidDim(n_List_Try,r_List_Try);
+        	 
+        	 r_List_Try= Arrays.asList(2,2);        	 
+        	 n_List_Try= Arrays.asList(2,2);
+        	 
+        	 System.out.println("Accedons a  un autre element" + n_List_Try + r_List_Try +  "\n");
+        	 TableFMatAugmentedCheck.getLocationMultidDim(n_List_Try,r_List_Try);
+        	 
+        	 r_List_Try= Arrays.asList(0,0);        	 
+        	 n_List_Try= Arrays.asList(1,1);
+        	 
+        	 System.out.println("Accedons a  un autre element" + n_List_Try + r_List_Try +  "\n");
+        	 TableFMatAugmentedCheck.getLocationMultidDim(n_List_Try,r_List_Try);
+        	 
+        	 
+        	 FMatrixAugmented TableFMatAugmentedCheck2=new FMatrixAugmented();
+        	 n_List_Check=Arrays.asList(2,3,3);
+        	 r_List_Try= Arrays.asList(1,1,3);        	 
+        	 n_List_Try= Arrays.asList(2,1,1);
+        	 TableFMatAugmentedCheck2.resizeMultiDim(n_List_Check);
+        	 System.out.println("Accedons a  un autre element" + n_List_Try + r_List_Try +  "\n");
+        	 TableFMatAugmentedCheck2.getLocationMultidDim(n_List_Try,r_List_Try);
+        	 
+        	 n_List_Check=Arrays.asList(2,2,2);
+        	 TableFMatAugmentedCheck2.resizeMultiDim(n_List_Check);
+        	 r_List_Try= Arrays.asList(1,1,3);        	 
+        	 n_List_Try= Arrays.asList(1,1,1);
+        	 System.out.println("Accedons a  un autre element" + n_List_Try + r_List_Try +  "\n");
+        	 TableFMatAugmentedCheck2.getLocationMultidDim(n_List_Try,r_List_Try);
+        	 
+        	 
+        	 java.util.ListIterator<Integer> itInt = n_List2.listIterator() ;
+        	 
+        	// n_List2.remove(lBranchNumber);
+        	 
+        	 
+        	 System.out.println("J ai passe le remove de nList2  \n");
+        	 //int coco=itInt.next();
+        	 int a=itInt.next();
+        	 System.out.println("voici la valeur de a" + a+ "\n");
+        	 a=itInt.next();
+        	 n_List2.get(0);
+        	 System.out.println("voici le premier element de la liste" +  n_List2.get(0)+ "\n");
+        	 System.out.println("voici le premier element de la liste" +  n_List2.get(1)+ "\n");
+        	 
+        	       	 
+        	 System.out.println("voici la valeur de a" + a+ "\n");
+        	 //itInt.remove();
+        	      	 
+        	 ///////////////////////////////
+        	 
+        	 
+        	 
+        	 System.out.println("voici le premier element de nList2" + n_List2.get(0)+ "\n");
+        	 System.out.println("voici le deuxieme element de nList2" + n_List2.get(0)+ "\n");
+        	// System.out.println("voici le premier element de nList3" + n_List3.get(0)+ "\n");
+        	 
+        	 //TableFMatAugmented[lBranchNumber].resizeMultidDim(n_MultidDim); 
+        	  
+         	 //end try
+        	 //now we can set the size for FMAtrixAUgmented since we know the branches that go with
+        	 
+        	 
+        //	 TableFMatAugmented[lBranchNumber]= ;
+        			 
+        			 
+        }
+        
+        
+        System.out.println(" FIN STEP 4 !!!\n");
+        
+       
+        //******************** END STEP4 ***************************************
+        
+        
+       
+        //init FMatrixAugmented for the speciation nodes of the network 
+        //NetworkNode[] NetworkSpeciationNodes=speciesNetwork.getSpeciationNodes(); 
+        NetworkNode[] NetworkSpeciationNodes=speciesNetwork.getSpeciationNodes(); 
+        for (int j = 0; j < NetworkSpeciationNodes.length; j++) { 
+        	FMatrixAugmented myFMatrixAugmented=new FMatrixAugmented(m_taxonsets.get(0).getTaxonCount()+m_taxonsets.get(1).getTaxonCount(),m_pData.getPattern(0)[0]);
+        	TableFMatAugmented[NetworkSpeciationNodes[j].gammaBranchNumber]=myFMatrixAugmented;             	
+        }        
+  
+        //init FMatrixAugmented for the reticulation nodes of the network 
+        NetworkNode[] NetworkReticulationNodes=speciesNetwork.getReticulationNodes();
+        for (int j = 0; j < NetworkReticulationNodes.length; j++) { 
+        	FMatrixAugmented myFMatrixAugmented=new FMatrixAugmented();
+        	TableFMatAugmented[NetworkReticulationNodes[j].gammaBranchNumber]=myFMatrixAugmented; 
+        	FMatrixAugmented myFMatrixAugmentedBis=new FMatrixAugmented();
+        	TableFMatAugmented[NetworkReticulationNodes[j].gammaBranchNumber+1]=myFMatrixAugmentedBis;  
+        }
+        
+        
+        //try to print out all the FMatrixAugmented
+        for (NetworkNode node: speciesNetwork.getAllNodesExceptOrigin()) {
+      	     System.out.printf("Je suis le noeud d id" + node.getNr() + "\n"); 
+      	     System.out.printf("Mon nom est" + node.getLabel() + "\n"); 
+      	     final Integer BranchNumber = node.gammaBranchNumber;
+      	     System.out.printf("voici ma branche gamma" + node.gammaBranchNumber + "\n");      	     
+      	     System.out.printf("voici ma TableFMatAugmented " + TableFMatAugmented[BranchNumber] + "\n"); 
+      	 	
+        }
+        
+         // faut il une Fmatrix pour lorigine???
+        
+        
+        
+        	
+    	return logP=3;
+
+			// correction for constant sites. If we are sampling the numbers of constant sites 
+			// (stored in ascSiteCount) then we include these probabilities. Otherwise we 
+			// assume that we want conditional likelihood, in which case we divide 
+			// by the probability that a site is not ascertained (or more correctly,
+			// subtract the log probability.
+		
+//			logP = m_core.computeLogLikelihood(root, u , v, 
+//	    			m_nSampleSizes, 
+//	    			m_data2,
+//	    			coalescenceRate,
+//	    			fCategoryRates, fCategoryProportions,
+//	    			useCache,
+//	    			m_bUsenNonPolymorphic,
+//	    
+    } // calculateLogLikelihood
+
+
+
+
+	@Override
+	public List<String> getArguments() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+
+
+	@Override
+	public List<String> getConditions() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+
+
+	@Override
+	public void sample(State state, Random random) {
+		// TODO Auto-generated method stub
+		
+	}
+
+    
+   
+	
+} // class SSSTreeLikelihood

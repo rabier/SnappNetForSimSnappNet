@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Copy element &apos;sim_summarize.xml&apos; to &apos;sim_summarize.xml&apos;&#x0A;- Original project: &apos;TanjaShortHandleMissing&apos;&#x0A;- Destination element: &apos;sim_summarize.xml&apos;&#x0A;- Original element: &apos;sim_summarize.xml&apos;" description="Copy file" element1="examples/summary/sim_summarize.xml" files="1" flags="589830" folders="0" id="org.eclipse.jdt.ui.copy" policy="org.eclipse.jdt.ui.copyResources" stamp="1538476112933" target="/TanjaShortHandleMissing/examples/summary/sim_summarize.xml" units="0" version="1.0"/>
+</session>

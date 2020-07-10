@@ -1,0 +1,1535 @@
+
+/*
+ * File FMatrix.java
+ *
+ * Copyright (C) 2010 Remco Bouckaert, David Bryant remco@cs.auckland.ac.nz
+ *
+ * This file is part of SnAP.
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership and licensing.
+ *
+ * SnAP is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ *  SnAP is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with SnAP; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+ * Boston, MA  02110-1301  USA
+ */
+package speciesnetworkBIS;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import snap.distribution.Num;
+
+/**FMatrixAugmented contains a Fmatrix and extra key elements 
+ * **/ 
+
+
+/** The FMatrix contains a site distribution for a node.
+ *  This is the likelihood multiplied by the lineage probabilities Pr(Ry | n,r ) x Pr(n)  in the paper.
+ *  **/
+
+
+// CE : my goal is to remove m_n and only deal with  m_n_MultiDim
+
+public class FMatrixAugmentedv1WithComments {
+		
+	public List<Integer> branchNumbers;
+	public List<String> branchLocations;
+	public List<Integer>  m_n_MultiDim;
+	
+	public List<Boolean> isBranchAboveRetic;
+	
+	
+	
+	int m_n;
+	public double [] F;
+	// F is private but CE changes to public for the moment
+	
+	public int getSize() {
+		return m_n;
+	}
+	
+	public List<Integer> getSizeMultidDim() {
+		return m_n_MultiDim;
+	}
+	
+	
+	public int getIndex(int i) {		 
+		int index = branchNumbers.indexOf(i);
+		return index;		
+	}
+	
+	public double [] getF() {		
+				
+		return F;
+	}
+	
+	
+	
+	public double get(int n, int r) {return F[n*(n+1)/2-1+r];}
+	public void set(int n, int r, double f) {F[n*(n+1)/2-1+r] = f;} //Needed to make this public to handle dominant markers. Could move that calculation here?
+//	private void mul(int n, int r, double f) {F[n*(n+1)/2-1+r] *= f;}
+//	private void add(int n, int r, double f) {F[n*(n+1)/2-1+r] += f;}
+//	private void setZero(int n) {Arrays.fill(F, n*(n+1)/2-1, (n+1)*(n+2)/2-1, 0.0);} 
+//	private void setZero() {Arrays.fill(F, 0.0);} 
+	
+	
+	
+
+	public void addBranchNumbersAndLocations(int i, String loc){
+			branchNumbers.add(i);
+			branchLocations.add(loc);
+			}
+	
+	
+	
+	public double [] asVectorCopy() {
+		double [] copy = new double[F.length];
+		System.arraycopy(F,0,copy,0,F.length);
+		return copy;
+	}
+	public double [] asVectorCopyBase1() {
+		double [] copy = new double[F.length + 1];
+		System.arraycopy(F,0,copy,1,F.length);
+		return copy;
+		}
+	
+	
+	
+	
+	//public double [] asVector() {return F;}
+	public FMatrixAugmentedv1WithComments() {
+		m_n = 0;
+	}
+
+	public FMatrixAugmentedv1WithComments(int n) {
+		resize(n);
+	}
+	
+	public FMatrixAugmentedv1WithComments(FMatrixAugmentedv1WithComments other) {
+		assign(other);
+	} // c'tor
+	
+	
+	// est ce que je l ai utilise ce constructeur ???????
+	/** construct a top?? likelihood **/
+	/*
+	public FMatrixAugmented(List<Integer> n_MultiDim, double []_F, List<Integer> _branchNumbers,
+	List<String> _branchLocations, int index) {
+		
+		
+		m_n_MultiDim = n_MultiDim;
+		branchNumbers = _branchNumbers;
+		branchLocations = _branchLocations;
+		branchLocations.set(index, "T");
+		F = _F;
+		
+	} // c'tor
+*/
+	
+	
+		
+	// CE we will see if we need that constructor
+	/** construct a top-of-branch likelihood for leaf branch**/
+	public FMatrixAugmentedv1WithComments(int n, double []_F, List<Integer> _branchNumbers,
+			List<String> _branchLocations) {
+		
+		
+		System.out.println("Je suis ds le constructeur de FMatrixAugmented pour lexponentiar unidim \n");
+		System.out.println("voici le F a copier" + _F +"\n");
+		m_n_MultiDim = Arrays.asList(n);
+		F = _F;
+		branchNumbers = _branchNumbers;
+		branchLocations = _branchLocations;
+		branchLocations.set(0, "T");
+	
+	} // c'tor
+	
+	
+	
+	/* 
+	 * OLD CONSTRUCTOR  (without setting things at the end)
+	 */
+	/*
+	/**constructor for left branch of reticulation node   **/
+	/*
+	public FMatrixAugmented(FMatrixAugmented fBelowRetic, int leftBranchNumber, int belowReticBranchNumber, double inheritProb, int toThrow) {
+		
+		m_n_MultiDim = new ArrayList<Integer>(fBelowRetic.m_n_MultiDim);		
+		int indListBelowReticBranchNumber=fBelowRetic.getIndex(belowReticBranchNumber);
+		int m_n_BelowRet=fBelowRetic.getSizeMultidDim().get(indListBelowReticBranchNumber);				
+		m_n_MultiDim.add(indListBelowReticBranchNumber, m_n_BelowRet);
+		
+		branchNumbers= new ArrayList<Integer>(fBelowRetic.branchNumbers);
+		branchLocations= new ArrayList<String>(fBelowRetic.branchLocations);
+		isBranchAboveRetic= new ArrayList<Boolean>(fBelowRetic.isBranchAboveRetic);
+				
+		branchNumbers.remove(indListBelowReticBranchNumber);
+		branchLocations.remove(indListBelowReticBranchNumber);
+		isBranchAboveRetic.remove(indListBelowReticBranchNumber);
+		
+		branchNumbers.add(indListBelowReticBranchNumber,leftBranchNumber+1);
+		branchNumbers.add(indListBelowReticBranchNumber,leftBranchNumber);		
+		branchLocations.add(indListBelowReticBranchNumber,"B");
+		branchLocations.add(indListBelowReticBranchNumber,"B");					
+		isBranchAboveRetic.add(indListBelowReticBranchNumber,true);
+		isBranchAboveRetic.add(indListBelowReticBranchNumber,true);
+		
+		resizeMultiDim();//initialise F
+				
+		//fill in F		
+		
+		List<Integer> n_listBot = new ArrayList<Integer>(m_n_MultiDim);
+		List<Integer> r_listBot = new ArrayList<Integer>(m_n_MultiDim);			
+		//System.out.println("Voici n_list" + n_listBot+ "\n");
+		//System.out.println("Voici r_list" + r_listBot+ "\n");				
+		//System.out.println("Voici n_list below Retic" + fBelowRetic.m_n_MultiDim+ "\n");
+		List<Integer> n_listTop = new ArrayList<Integer>(fBelowRetic.m_n_MultiDim);
+		List<Integer> r_listTop = new ArrayList<Integer>(fBelowRetic.m_n_MultiDim);		
+		//System.out.println("Voici n_listTop" + n_listTop+ "\n");
+		//System.out.println("Voici r_listTop" + r_listTop+ "\n");
+						
+		for (int s = 1; s <= m_n_BelowRet; s++) {
+			//s lineages at the top of the edge below retic node
+						
+			n_listTop.set(indListBelowReticBranchNumber, s);			
+			
+			for (int j = 0; j <= s; j++) {
+				// j among lineages go left, s-j go right						
+		
+				//n_listBot.get(indListBelowReticBranchNumber); //get value at location refering to left branch
+				//n_listBot.get(indListBelowReticBranchNumber+1); //get value at location refering to right branch
+				n_listBot.set(indListBelowReticBranchNumber, j);
+				n_listBot.set(indListBelowReticBranchNumber+1, s-j);					
+			
+					for (int rTopBelow = 0; rTopBelow <= s; rTopBelow++) {
+													
+						r_listTop.set(indListBelowReticBranchNumber, rTopBelow);
+								
+						for (int rLeft = 0; rLeft<= Math.min(j,rTopBelow); rLeft++) { 													
+							r_listBot.set(indListBelowReticBranchNumber, rLeft);
+							r_listBot.set(indListBelowReticBranchNumber+1, rTopBelow-rLeft);										 
+							Num C=new Num();
+							double coeff= Math.pow(inheritProb,j)*Math.pow(1-inheritProb,s-j) * C.combination(s,j);							
+							F[getLocationMultidDim(n_listBot, r_listBot)] =	coeff * fBelowRetic.getF()[fBelowRetic.getLocationMultidDim(n_listTop, r_listTop)];													
+						}		
+					}	
+			}	
+		
+		}
+	}
+	*/
+	//END OLD CONSTRUCTOR
+	
+	/// New constructor (a good one setting new things at the end of lists) 
+	//WAIT for fill in extra elements ... 
+	/**constructor for right branch of reticulation node (the right branch is located at the end of lists)  **/
+	public FMatrixAugmentedv1WithComments(FMatrixAugmentedv1WithComments fBelowRetic, int leftBranchNumber, int belowReticBranchNumber, double inheritProb) {
+		
+		// In the lists, this.branchNumbers , this.branchLocations, this.isBranchAboveRetic, the last element will refer to the right branch above
+		//the retic node, whereas the last but one will refer to the left branch
+		
+		m_n_MultiDim = new ArrayList<Integer>(fBelowRetic.m_n_MultiDim);		
+		int indListBelowReticBranchNumber=fBelowRetic.getIndex(belowReticBranchNumber);
+		int m_n_BelowRet=fBelowRetic.getSizeMultidDim().get(indListBelowReticBranchNumber);		
+		
+		//m_n_MultiDim.add(indListBelowReticBranchNumber, m_n_BelowRet);
+		m_n_MultiDim.remove(indListBelowReticBranchNumber);
+		m_n_MultiDim.add(m_n_BelowRet);
+		m_n_MultiDim.add(m_n_BelowRet);
+		// the dimension for retic is handled at the end of the list 
+		
+						
+		branchNumbers= new ArrayList<Integer>(fBelowRetic.branchNumbers);
+		branchLocations= new ArrayList<String>(fBelowRetic.branchLocations);
+		isBranchAboveRetic= new ArrayList<Boolean>(fBelowRetic.isBranchAboveRetic);
+				
+		branchNumbers.remove(indListBelowReticBranchNumber);
+		branchLocations.remove(indListBelowReticBranchNumber);
+		isBranchAboveRetic.remove(indListBelowReticBranchNumber);
+		
+					
+		branchNumbers.add(leftBranchNumber);
+		branchNumbers.add(leftBranchNumber+1);					
+		branchLocations.add("B");
+		branchLocations.add("B");								
+		isBranchAboveRetic.add(true);
+		isBranchAboveRetic.add(true);
+		
+		resizeMultiDim();//initialise F
+				
+		//fill in F		
+		
+		
+		//be careful, n_listBot and r_listBot refers to the Bottom above the retic node
+		//that is why we use the locations at the end for those list		
+		List<Integer> n_listBot = new ArrayList<Integer>(m_n_MultiDim);
+		List<Integer> r_listBot = new ArrayList<Integer>(m_n_MultiDim);			
+		//System.out.println("Voici n_list" + n_listBot+ "\n");
+		//System.out.println("Voici r_list" + r_listBot+ "\n");				
+		//System.out.println("Voici n_list below Retic" + fBelowRetic.m_n_MultiDim+ "\n");
+		
+		//be careful, n_listTop and r_listTop refers to the top below the retic node
+		//that is why we use the location indListBelowReticBranchNumber for those list			 
+		List<Integer> n_listTop = new ArrayList<Integer>(fBelowRetic.m_n_MultiDim);
+		List<Integer> r_listTop = new ArrayList<Integer>(fBelowRetic.m_n_MultiDim);		
+		//System.out.println("Voici n_listTop" + n_listTop+ "\n");
+		//System.out.println("Voici r_listTop" + r_listTop+ "\n");
+						
+		for (int s = 1; s <= m_n_BelowRet; s++) {
+			//s lineages at the top of the edge below retic node
+											
+			n_listTop.set(indListBelowReticBranchNumber, s);			
+			
+			for (int j = 0; j <= s; j++) {
+				// j among lineages go left, s-j go right						
+						
+				n_listBot.set(n_listBot.size()-2, j);  //for left branch
+				n_listBot.set(n_listBot.size()-1, s-j);	 // for right branch				
+			
+					for (int rTopBelow = 0; rTopBelow <= s; rTopBelow++) {
+													
+						r_listTop.set(indListBelowReticBranchNumber, rTopBelow);
+								
+						//for (int rLeft = 0; rLeft<= Math.min(j,rTopBelow); rLeft++) { 													
+						for (int rLeft = Math.max(0,rTopBelow-s+j); rLeft<= Math.min(j,rTopBelow); rLeft++) { 
+							
+							r_listBot.set(n_listBot.size()-2, rLeft);
+							r_listBot.set(n_listBot.size()-1, rTopBelow-rLeft);				
+														
+							System.out.println("Affichons pour y voir plus clair !!!\n");
+							System.out.println("Voici n_listTop" + n_listTop+ "\n");
+							System.out.println("Voici r_listTop" + r_listTop+ "\n");
+							System.out.println("Voici la location correspondante ds F" + fBelowRetic.getLocationMultidDim(n_listTop, r_listTop)+ "\n");
+							System.out.println("Voici n_listBot" + n_listBot+ "\n");
+							System.out.println("Voici r_listBot" + r_listBot+ "\n");
+							System.out.println("Voici la location correspondante ds F" + getLocationMultidDim(n_listBot, r_listBot)+ "\n");
+							System.out.println("Fin de l'affichage, voyons plus clair !!!\n");
+							
+							Num C=new Num();
+							double coeff= Math.pow(inheritProb,j)*Math.pow(1-inheritProb,s-j) * C.combination(s,j);							
+							F[getLocationMultidDim(n_listBot, r_listBot)] =	coeff * fBelowRetic.getF()[fBelowRetic.getLocationMultidDim(n_listTop, r_listTop)];	
+							
+							
+						}		
+					}	
+			}	
+		
+		}
+	}
+			
+	//END new constructor
+	
+	
+	///// check something !!!
+	// the constructor below is useless !
+	
+	/**constructor for left branch of reticulation node **/
+	
+	/*
+
+	//fBotTopRetic is the FMatrixAugmented for fBotTop
+	//the idea here is to have new constructor to go to fTopTop
+	public FMatrixAugmented(FMatrixAugmented fBotTopRetic, int leftBranchNumber, double inheritProb) {
+		
+		//at this time the right branch of the retic node is at the end of the lists
+		m_n_MultiDim = new ArrayList<Integer>(fBotTopRetic.m_n_MultiDim); // it stays the same		
+		int m_n_MultiDimLast = m_n_MultiDim.get(m_n_MultiDim.size()-1);
+		
+		branchNumbers= new ArrayList<Integer>(fBotTopRetic.branchNumbers);
+		branchLocations= new ArrayList<String>(fBotTopRetic.branchLocations);
+		
+		//need to swap right and left, in order to have left at the end of the list
+		branchNumbers.remove(branchNumbers.size()-2);
+		branchNumbers.add(leftBranchNumber);
+		branchLocations.remove(branchLocations.size()-2);
+		branchLocations.add("B");
+				
+		isBranchAboveRetic= new ArrayList<Boolean>(fBotTopRetic.isBranchAboveRetic);
+		//isBranchAboveRetic is unchanged  since left and right are True 
+							
+		F = new double[fBotTopRetic.getF().length];//initialise F
+		//could have done 
+		//resizeMultiDim() 
+		
+		//fill in F		
+		//be careful, n_listBot and r_listBot refers to the Bottom above the retic node
+		//that is why we use the locations at the end for those list		
+		List<Integer> n_listBot = new ArrayList<Integer>(m_n_MultiDim);
+		List<Integer> r_listBot = new ArrayList<Integer>(m_n_MultiDim);			
+	
+		
+		
+	}	
+		*/
+	//end of the useless constructor
+	//end check something 
+	
+	
+	/**constructor for case 2*  **/
+	// the one that worked !!!!!!
+	
+	
+	/*
+	public FMatrixAugmented(FMatrixAugmented fFirstChild, FMatrixAugmented fSecondChild, int branchFirstChild, int branchSecondChild, int branchNumber) {
+		
+		
+		//To begin let us initialize	
+		m_n_MultiDim = new ArrayList<Integer>(fFirstChild.m_n_MultiDim);	
+		branchNumbers= new ArrayList<Integer>(fFirstChild.branchNumbers);
+		branchLocations= new ArrayList<String>(fFirstChild.branchLocations);
+		isBranchAboveRetic= new ArrayList<Boolean>(fFirstChild.isBranchAboveRetic);		
+		
+	    int locationFirstChild=fFirstChild.getIndex(branchFirstChild);		
+		m_n_MultiDim.remove(locationFirstChild);
+		branchNumbers.remove(locationFirstChild);
+		branchLocations.remove(locationFirstChild);
+		isBranchAboveRetic.remove(locationFirstChild);
+				
+		int locationSecondChild=fSecondChild.getIndex(branchSecondChild);
+		
+		m_n_MultiDim.addAll(fSecondChild.m_n_MultiDim);
+		m_n_MultiDim.remove(fFirstChild.m_n_MultiDim.size()-1+locationSecondChild);
+		branchNumbers.addAll(fSecondChild.branchNumbers);
+		branchNumbers.remove(fFirstChild.m_n_MultiDim.size()-1+locationSecondChild);
+		branchLocations.addAll(fSecondChild.branchLocations);
+		branchLocations.remove(fFirstChild.m_n_MultiDim.size()-1+locationSecondChild);
+		isBranchAboveRetic.addAll(fSecondChild.isBranchAboveRetic);
+		isBranchAboveRetic.remove(fFirstChild.m_n_MultiDim.size()-1+locationSecondChild);
+	
+		m_n_MultiDim.add(fFirstChild.m_n_MultiDim.get(locationFirstChild) + fSecondChild.m_n_MultiDim.get(locationSecondChild));	
+		branchNumbers.add(branchNumber);
+		branchLocations.add("B");
+			
+		int minNumberLineages=0;
+		if ( (fFirstChild.branchNumbers.size()>1) &   (fSecondChild.branchNumbers.size()>1) ) {
+			isBranchAboveRetic.add(true);	
+			//there could be none lineage on that branch 
+		} else { isBranchAboveRetic.add(false);
+		//at least one lineage is going up
+		minNumberLineages=1;
+		}
+		
+		
+		//Note: our node of interest is at the end of the list !!!
+		//end of initialization
+		
+		//////////////////////////////
+		resizeMultiDim();//initialise F
+				
+		//fill in F				
+		
+		//be careful, n_listBot and r_listBot refers to the Bottom above the internal node
+		//that is why we use the locations at the end for those list		
+		List<Integer> n_listBot = new ArrayList<Integer>(m_n_MultiDim);
+		List<Integer> r_listBot = new ArrayList<Integer>(m_n_MultiDim);			
+		
+		//be careful, n_listTop and r_listTop refers to the top below the internal node		 
+		List<Integer> n_listTopFirstChild = new ArrayList<Integer>(fFirstChild.m_n_MultiDim);
+		List<Integer> r_listTopFirstChild = new ArrayList<Integer>(fFirstChild.m_n_MultiDim);		
+		
+		List<Integer> n_listTopSecondChild = new ArrayList<Integer>(fSecondChild.m_n_MultiDim);
+		List<Integer> r_listTopSecondChild = new ArrayList<Integer>(fSecondChild.m_n_MultiDim);		
+		
+		Num C=new Num(); //for computing combinations
+		double fFirstChildValue= 0;
+		double fSecondChildValue=0;
+		double coeff=0;
+		
+		int minNumberLineagesFirstChild=  fFirstChild.isBranchAboveRetic.get(locationFirstChild)==true ? 0 :1;
+		int minNumberLineagesSecondChild=  fSecondChild.isBranchAboveRetic.get(locationSecondChild)==true ? 0 :1;
+		int maxNumberLineagesFirstChild=fFirstChild.m_n_MultiDim.get(locationFirstChild);
+		int maxNumberLineagesSecondChild=fSecondChild.m_n_MultiDim.get(locationSecondChild);
+		
+		//we ll have to set other dimensions		
+		
+		for (int s = minNumberLineages; s <= m_n_MultiDim.get(m_n_MultiDim.size()-1); s++) {
+			//s lineages at the bottom of the edge of interest
+												
+			n_listBot.set(n_listBot.size()-1, s);
+			
+			for (int k = 0; k <= s; k++) {
+				//k red lineages among the s 
+				
+				r_listBot.set(r_listBot.size()-1, k);
+						
+				//for (int j = 0; j <= s; j++) {
+				for (int j = Math.max(minNumberLineagesFirstChild, s-maxNumberLineagesSecondChild); j <= Math.min(s-minNumberLineagesSecondChild, maxNumberLineagesFirstChild); j++) {
+					// j among s lineages come from first child
+									
+					n_listTopFirstChild.set(locationFirstChild, j); 
+					n_listTopSecondChild.set(locationSecondChild, s-j);
+										
+					//for (int m = Math.max(0,k-fSecondChild.m_n_MultiDim.get(locationSecondChild)); m <= Math.min(j,k); m++) {
+					for (int m =Math.max(0, Math.max(-s+j+k,k-fSecondChild.m_n_MultiDim.get(locationSecondChild))); m <= Math.min(j,k); m++) {
+						// m red lineages among the j lineages of the first child
+						
+				r_listTopFirstChild.set(locationFirstChild, m);
+				r_listTopSecondChild.set(locationSecondChild, k-m);
+													
+				System.out.println("Affichons pour y voir plus clair !!!\n");
+		
+
+				System.out.println("Voici n_listBot" + n_listBot+ "\n");
+				System.out.println("Voici r_listBot" + r_listBot+ "\n");
+				System.out.println("Voici la location correspondante ds F" + getLocationMultidDim(n_listBot, r_listBot)+ "\n");
+							
+				
+				System.out.println("Voici n_listTopFirstChild" + n_listTopFirstChild + "\n");
+				System.out.println("Voici r_listTopFirstChild" + r_listTopFirstChild + "\n");
+				System.out.println("Voici la location correspondante ds F" + fFirstChild.getLocationMultidDim(n_listTopFirstChild, r_listTopFirstChild)+ "\n");
+				
+				System.out.println("Voici n_listTopSecondChild" + n_listTopSecondChild + "\n");
+				System.out.println("Voici r_listTopSecondChild" + r_listTopSecondChild + "\n");
+				System.out.println("Voici la location correspondante ds F" + fSecondChild.getLocationMultidDim(n_listTopSecondChild, r_listTopSecondChild)+ "\n");
+								
+				System.out.println("Fin de l'affichage, voyons plus clair !!!\n");
+			
+				fFirstChildValue= fFirstChild.getF()[fFirstChild.getLocationMultidDim(n_listTopFirstChild, r_listTopFirstChild)];
+				fSecondChildValue= fSecondChild.getF()[fSecondChild.getLocationMultidDim(n_listTopSecondChild, r_listTopSecondChild)];
+				coeff= C.combination(k,m) * C.combination(s-k,j-m) / C.combination(s,j);		
+				
+				F[getLocationMultidDim(n_listBot, r_listBot)] += fFirstChildValue * fSecondChildValue * coeff;
+				
+				System.out.println("voici la valeur de coeff !!!" + coeff + "\n");
+				System.out.println("voici fFirstChildValue !!!" + fFirstChildValue + "\n");
+				System.out.println("voici fSecondChildValue !!!" + fSecondChildValue + "\n");
+				
+				System.out.println("voici la valeur ajoutee !!!" + fFirstChildValue * fSecondChildValue * coeff + "\n");
+				
+ 			
+			       }
+				}
+			}
+		}		
+		}		
+*/
+
+	//////////////////////////////////////////////////////////
+	 
+	
+	///// TRY SOMETHING !!!!
+	
+	/*
+	public void recurseSetOLD(List<Integer> n_listBot, List<Integer> r_listBot, int dimBot,
+			List<Integer> n_listTopFirstChild, List<Integer> r_listTopFirstChild, int dimFirstChild,
+			List<Integer> n_listTopSecondChild, List<Integer> r_listTopSecondChild, int dimSecondChild,
+			FMatrixAugmented fFirstChild, FMatrixAugmented fSecondChild, int locationFirstChild, int locationSecondChild) {
+						
+		
+		//pour  n_listBot et r_lisBot on ne set pas la derniere dimension car elle sera initialisee
+		//explicitement par la suite, so we use m_n_MultiDim.size()-1
+		
+	
+		
+		
+		for (int i = dimBot; i < m_n_MultiDim.size()-1; i++) {	
+			int minNumberLineages= isBranchAboveRetic.get(i)==true ? 0 :1;
+			// to know if at least 1 lineage go up, or if it is possible to have 0 lineage 			
+			for (int j = minNumberLineages; j <= m_n_MultiDim.get(i); j++) {				
+				n_listBot.set(i, j);				
+				for (int k = 0; k <= j; k++) {					
+					r_listBot.set(i, k);			
+					recurseSet(n_listBot, r_listBot, dimBot+1, n_listTopFirstChild, r_listTopFirstChild, dimFirstChild,
+							n_listTopSecondChild, r_listTopSecondChild, dimSecondChild, fFirstChild, fSecondChild,
+							locationFirstChild, locationSecondChild);					
+				}						
+			}
+		}
+				
+		
+		// handle first child now		
+		
+		for (int i = dimFirstChild; i < fFirstChild.m_n_MultiDim.size(); i++) {				
+			if (i!= locationFirstChild) {
+			//do it only if the dimension is not the one we are interested to fill later			
+				int minNumberLineagesFirstChild= fFirstChild.isBranchAboveRetic.get(i)==true ? 0 :1;
+				// to know if at least 1 lineage go up, or if it is possible to have 0 lineage 
+				for (int j = minNumberLineagesFirstChild; j <= fFirstChild.m_n_MultiDim.get(i); j++) {					
+					n_listTopFirstChild.set(i, j);				
+					for (int k = 0; k <= j; k++) {					
+						r_listTopFirstChild.set(i, k);			
+						recurseSet(n_listBot, r_listBot, dimBot, n_listTopFirstChild, r_listTopFirstChild, dimFirstChild+1,
+								n_listTopSecondChild, r_listTopSecondChild, dimSecondChild, fFirstChild, fSecondChild, 
+								locationFirstChild, locationSecondChild);					
+					}		
+				}						
+			}		
+		}
+		
+		// handle second child now
+		
+		for (int i = dimSecondChild; i < fSecondChild.m_n_MultiDim.size(); i++) {					
+			if (i!= locationSecondChild) {
+				//do it only if the dimension is not the one we are interested to fill later
+				int minNumberLineagesSecondChild= fSecondChild.isBranchAboveRetic.get(i)==true ? 0 :1;
+				// to know if at least 1 lineage go up, or if it is possible to have 0 lineage 
+				for (int j =  minNumberLineagesSecondChild; j <= fSecondChild.m_n_MultiDim.get(i); j++) {			
+					n_listTopSecondChild.set(i, j);				
+					for (int k = 0; k <= j; k++) {					
+						r_listTopSecondChild.set(i, k);			
+						recurseSet(n_listBot, r_listBot, dimBot, n_listTopFirstChild, r_listTopFirstChild, dimFirstChild,
+								n_listTopSecondChild, r_listTopSecondChild, dimSecondChild+1, fFirstChild, fSecondChild,
+								locationFirstChild, locationSecondChild);					
+					}		
+				}				
+			}
+		}
+		
+		
+		//at this time , we have a  n_listTopFirstChild, r_listTopFirstChild, n_listTopSecondChild, r_listTopSecondChild
+		//n_listBot, r_listBot ready to be filled !!!!
+		
+	
+		System.out.println("J ai choisi !!\n");
+		System.out.println("Voici n_listBot" + n_listBot+ "\n");
+		System.out.println("Voici r_listBot" + r_listBot+ "\n");
+		System.out.println("Voici  n_listTopFirstChild" + n_listTopFirstChild+ "\n");
+		System.out.println("Voici  r_listTopFirstChild" + r_listTopFirstChild+ "\n");
+		System.out.println("Voici  n_listTopFirstChild" + n_listTopSecondChild+ "\n");
+		System.out.println("Voici  r_listTopFirstChild" + r_listTopSecondChild+ "\n");
+		System.out.println("Time to Fill F !!\n");
+		
+
+		
+		//time to fill F !!!!
+		fillF(fFirstChild, fSecondChild, n_listBot, r_listBot, n_listTopFirstChild,  r_listTopFirstChild, 
+				n_listTopSecondChild, r_listTopSecondChild, locationFirstChild, locationSecondChild);
+		
+	}
+	*/
+	//end recursesetOLD
+
+	
+	
+	
+	/// je m etais plante sur le recureSet voici encroe une version fausse !!!!
+	
+/*
+	
+	public void recurseSet(List<Integer> n_listBot, List<Integer> r_listBot, int dimBot, 
+			FMatrixAugmented fFirstChild, FMatrixAugmented fSecondChild, int locationFirstChild, int locationSecondChild) {
+					//it gives  a n_listBot and a r_listBot !!!
+		
+		//we do not set the last dimension for
+		//  n_listBot and r_lisBot since the last dimension will be initialized later in fillF
+		// so we use m_n_MultiDim.size()-1 in the loop !
+ 
+		
+		for (int i = dimBot; i < m_n_MultiDim.size()-1; i++) {	
+			int minNumberLineages= isBranchAboveRetic.get(i)==true ? 0 :1;
+			// to know if at least 1 lineage go up, or if it is possible to have 0 lineage 			
+			for (int j = minNumberLineages; j <= m_n_MultiDim.get(i); j++) {				
+				n_listBot.set(i, j);				
+				for (int k = 0; k <= j; k++) {					
+					r_listBot.set(i, k);			
+					recurseSet(n_listBot, r_listBot, dimBot+1, fFirstChild, fSecondChild,
+							locationFirstChild, locationSecondChild);					
+				}						
+			}
+		}
+		
+		//at this time , we have a  
+		//n_listBot, r_listBot ready !!!!
+		
+		//time to fill F !!!!
+		//if (dimBot== (m_n_MultiDim.size()-2) ) {
+	//	if (dimBot==0) {
+			fillF(fFirstChild, fSecondChild, n_listBot, r_listBot, locationFirstChild, locationSecondChild);
+	//	}
+		
+	}
+	*/
+	
+	//end new version recurseSet qui est fausse
+	
+
+	//une nouvelle version de recurrrrrrrrrrr Good now !!!
+	public void recurseGood(List<Integer> n_listBot, List<Integer> r_listBot, int i, 
+			FMatrixAugmentedv1WithComments fFirstChild, FMatrixAugmentedv1WithComments fSecondChild, int locationFirstChild, int locationSecondChild) {
+					//it gives  a n_listBot and a r_listBot !!!
+		
+		//we do not set the last dimension for
+		//  n_listBot and r_lisBot since the last dimension will be initialized later in fillF
+		// so we use m_n_MultiDim.size()-1 as a terminal condition  !
+ 
+			if (i== (m_n_MultiDim.size()-1) ) {
+			
+				System.out.println("Ds RecurseGood, Voici n_listBot" + n_listBot+ "\n");
+				System.out.println("Ds RecurseGood, Voici r_listBot" + r_listBot+ "\n");
+				
+			    fillF(fFirstChild, fSecondChild, n_listBot, r_listBot, locationFirstChild, locationSecondChild);
+			
+			} else {
+		
+				int minNumberLineages= isBranchAboveRetic.get(i)==true ? 0 :1;
+				// to know if at least 1 lineage go up, or if it is possible to have 0 lineage 			
+				for (int j = minNumberLineages; j <= m_n_MultiDim.get(i); j++) {				
+					n_listBot.set(i, j);				
+					for (int k = 0; k <= j; k++) {					
+						r_listBot.set(i, k);			
+						recurseGood(n_listBot, r_listBot, i+1, fFirstChild, fSecondChild,
+							locationFirstChild, locationSecondChild);					
+					}						
+				}
+		
+			}
+	
+		
+	}
+	
+	
+	// j essaie de voir comment marche la fonction recursive !!!
+	
+	public void recurseCheckALSO(int n, List<Integer> n_listBot) {
+	
+	
+		if (n==3) {
+			System.out.println("Oui cela a marche et n vaut" + n+ "\n");
+			n_listBot.set(0, 4);
+			n_listBot.set(1, 2);
+		}else {		
+			recurseCheckALSO(n+1,  n_listBot);			
+		}
+		
+		System.out.println(" n vaut" + n+ "\n");
+		System.out.println(" n_listBot vaut" + n_listBot+ "\n");
+	}
+	
+	
+	////////////////////////////////////////
+
+	
+	
+	public void recurseBis(List<Integer> n_listBot,  int loc) {
+		//it gives  a n_listBot and a r_listBot !!!
+				
+			// to know if at least 1 lineage go up, or if it is possible to have 0 lineage 			
+	
+			if (loc==3) {
+
+				System.out.println("Ds RecurseBis, Voici loc" + loc+ "\n");
+				//System.out.println("Ds RecurseCheck, Voici dimBotFinal" + dimBotFinal+ "\n");
+				System.out.println("Voici n_listBot" + n_listBot+ "\n");
+			
+				}else {
+		
+		
+					for (int j = 0; j <= 2; j++) {				
+	
+						n_listBot.set(loc, j);	
+						recurseBis(n_listBot, loc+1);
+	
+					}						
+	
+				}
+
+	}
+
+	
+	
+	
+	
+	//new constructor for case 2* that works with new version (above) of recurseSet 
+	public  FMatrixAugmentedv1WithComments(FMatrixAugmentedv1WithComments fFirstChild, FMatrixAugmentedv1WithComments fSecondChild, int branchFirstChild, 
+			int branchSecondChild, int branchNumber) {
+		
+		
+		//To begin let us initialize	
+		m_n_MultiDim = new ArrayList<Integer>(fFirstChild.m_n_MultiDim);	
+		branchNumbers= new ArrayList<Integer>(fFirstChild.branchNumbers);
+		branchLocations= new ArrayList<String>(fFirstChild.branchLocations);
+		isBranchAboveRetic= new ArrayList<Boolean>(fFirstChild.isBranchAboveRetic);		
+		
+	    int locationFirstChild=fFirstChild.getIndex(branchFirstChild);		
+		m_n_MultiDim.remove(locationFirstChild);
+		branchNumbers.remove(locationFirstChild);
+		branchLocations.remove(locationFirstChild);
+		isBranchAboveRetic.remove(locationFirstChild);
+				
+		int locationSecondChild=fSecondChild.getIndex(branchSecondChild);
+		
+		m_n_MultiDim.addAll(fSecondChild.m_n_MultiDim);
+		m_n_MultiDim.remove(fFirstChild.m_n_MultiDim.size()-1+locationSecondChild);
+		branchNumbers.addAll(fSecondChild.branchNumbers);
+		branchNumbers.remove(fFirstChild.m_n_MultiDim.size()-1+locationSecondChild);
+		branchLocations.addAll(fSecondChild.branchLocations);
+		branchLocations.remove(fFirstChild.m_n_MultiDim.size()-1+locationSecondChild);
+		isBranchAboveRetic.addAll(fSecondChild.isBranchAboveRetic);
+		isBranchAboveRetic.remove(fFirstChild.m_n_MultiDim.size()-1+locationSecondChild);
+	
+		m_n_MultiDim.add(fFirstChild.m_n_MultiDim.get(locationFirstChild) + fSecondChild.m_n_MultiDim.get(locationSecondChild));	
+		branchNumbers.add(branchNumber);
+		branchLocations.add("B");
+			
+		int minNumberLineages=0;
+		if ( (fFirstChild.branchNumbers.size()>1) &   (fSecondChild.branchNumbers.size()>1) ) {
+			isBranchAboveRetic.add(true);	
+			//there could be none lineage on that branch 
+		} else { isBranchAboveRetic.add(false);
+		//at least one lineage is going up
+		minNumberLineages=1;
+		}
+		
+		
+		//Note: our node of interest is at the end of the list !!!
+		//end of initialization
+		
+		//////////////////////////////
+		resizeMultiDim();//initialise F
+			
+		
+		//be careful, n_listBot and r_listBot refers to the Bottom above the internal node
+		//we will use the locations at the end for those list		
+		List<Integer> n_listBot = new ArrayList<Integer>(m_n_MultiDim);
+		List<Integer> r_listBot = new ArrayList<Integer>(m_n_MultiDim);			
+		
+		/*
+		recurseSet(n_listBot, r_listBot, 0,
+				fFirstChild, fSecondChild, locationFirstChild, locationSecondChild);
+		*/
+		recurseGood(n_listBot, r_listBot, 0,
+				fFirstChild, fSecondChild, locationFirstChild, locationSecondChild);
+	}
+	
+	
+	
+	//end new constructor for case 2*
+	
+	
+	
+	
+	//new version for FillF for an internal node , case 2*
+	
+	public void fillF(FMatrixAugmentedv1WithComments fFirstChild, FMatrixAugmentedv1WithComments fSecondChild, 
+			List<Integer> n_listBot, List<Integer> r_listBot, 
+			int locationFirstChild, int locationSecondChild) {
+		
+		
+		Num C=new Num(); //for computing combinations
+		double fFirstChildValue= 0;
+		double fSecondChildValue=0;
+		double coeff=0;
+		
+		List<Integer> n_listTopFirstChild = new ArrayList<Integer>(fFirstChild.m_n_MultiDim);
+		List<Integer> r_listTopFirstChild = new ArrayList<Integer>(fFirstChild.m_n_MultiDim);		
+		
+		List<Integer> n_listTopSecondChild = new ArrayList<Integer>(fSecondChild.m_n_MultiDim);
+		List<Integer> r_listTopSecondChild = new ArrayList<Integer>(fSecondChild.m_n_MultiDim);		
+		
+		
+		int minNumberLineagesFirstChild=  fFirstChild.isBranchAboveRetic.get(locationFirstChild)==true ? 0 :1;
+		int minNumberLineagesSecondChild=  fSecondChild.isBranchAboveRetic.get(locationSecondChild)==true ? 0 :1;
+		int maxNumberLineagesFirstChild=fFirstChild.m_n_MultiDim.get(locationFirstChild);
+		int maxNumberLineagesSecondChild=fSecondChild.m_n_MultiDim.get(locationSecondChild);						
+		int minNumberLineages= isBranchAboveRetic.get(isBranchAboveRetic.size()-1)==true ? 0:1;
+		
+		
+		//initialize n_listTopFirstChild, r_listTopFirstChild, n_listTopSecondChild, r_listTopSecondChild
+		// with nBot and rBot
+		
+		
+		// all the branches contained in n_listTopFirstChild are contained in n_Bot
+		//excepted the branch corresponding to FirstChild
+
+		
+		for (int i=0; i<fFirstChild.branchNumbers.size(); i++) {			
+			int branchNb =fFirstChild.branchNumbers.get(i);			
+			
+			if (branchNb !=  fFirstChild.branchNumbers.get(locationFirstChild)) {
+			int idBranchInBot = this.branchNumbers.indexOf(branchNb); 
+			n_listTopFirstChild.set(i,n_listBot.get(idBranchInBot)); 	
+			r_listTopFirstChild.set(i,r_listBot.get(idBranchInBot)); 	}		
+		
+		}
+		
+		// all the branches contained in n_listTopSecondChild are contained in n_Bot
+		//excepted the branch corresponding to SecondChild
+		for (int i=0; i<fSecondChild.branchNumbers.size(); i++) {			
+			int branchNb =fSecondChild.branchNumbers.get(i);				
+			
+			if (branchNb !=  fSecondChild.branchNumbers.get(locationSecondChild)) {
+				int idBranchInBot = this.branchNumbers.indexOf(branchNb); 
+				n_listTopSecondChild.set(i,n_listBot.get(idBranchInBot)); 	
+				r_listTopSecondChild.set(i,r_listBot.get(idBranchInBot)); 	}
+			
+		}
+		
+		
+		
+		for (int s = minNumberLineages; s <= m_n_MultiDim.get(m_n_MultiDim.size()-1); s++) {
+			//s lineages at the bottom of the edge of interest
+												
+			n_listBot.set(n_listBot.size()-1, s);
+			
+			for (int k = 0; k <= s; k++) {
+				//k red lineages among the s 
+				
+				r_listBot.set(r_listBot.size()-1, k);
+						
+				//for (int j = 0; j <= s; j++) {
+				for (int j = Math.max(minNumberLineagesFirstChild, s-maxNumberLineagesSecondChild); j <= Math.min(s-minNumberLineagesSecondChild, maxNumberLineagesFirstChild); j++) {
+					// j among s lineages come from first child
+									
+					n_listTopFirstChild.set(locationFirstChild, j); 
+					n_listTopSecondChild.set(locationSecondChild, s-j);
+										
+					//for (int m = Math.max(0,k-fSecondChild.m_n_MultiDim.get(locationSecondChild)); m <= Math.min(j,k); m++) {
+					for (int m =Math.max(0, Math.max(-s+j+k,k-fSecondChild.m_n_MultiDim.get(locationSecondChild))); m <= Math.min(j,k); m++) {
+						// m red lineages among the j lineages of the first child
+						
+				r_listTopFirstChild.set(locationFirstChild, m);
+				r_listTopSecondChild.set(locationSecondChild, k-m);
+				/*									
+				System.out.println("Affichons pour y voir plus clair !!!\n");
+		
+
+				System.out.println("Voici n_listBot" + n_listBot+ "\n");
+				System.out.println("Voici r_listBot" + r_listBot+ "\n");
+				System.out.println("Voici la location correspondante ds F" + getLocationMultidDim(n_listBot, r_listBot)+ "\n");
+							
+				
+				System.out.println("Voici n_listTopFirstChild" + n_listTopFirstChild + "\n");
+				System.out.println("Voici r_listTopFirstChild" + r_listTopFirstChild + "\n");
+				System.out.println("Voici la location correspondante ds F" + fFirstChild.getLocationMultidDim(n_listTopFirstChild, r_listTopFirstChild)+ "\n");
+				
+				System.out.println("Voici n_listTopSecondChild" + n_listTopSecondChild + "\n");
+				System.out.println("Voici r_listTopSecondChild" + r_listTopSecondChild + "\n");
+				System.out.println("Voici la location correspondante ds F" + fSecondChild.getLocationMultidDim(n_listTopSecondChild, r_listTopSecondChild)+ "\n");
+								
+				System.out.println("Fin de l'affichage, voyons plus clair !!!\n");
+				*/
+			
+				fFirstChildValue= fFirstChild.getF()[fFirstChild.getLocationMultidDim(n_listTopFirstChild, r_listTopFirstChild)];
+				fSecondChildValue= fSecondChild.getF()[fSecondChild.getLocationMultidDim(n_listTopSecondChild, r_listTopSecondChild)];
+				coeff= C.combination(k,m) * C.combination(s-k,j-m) / C.combination(s,j);		
+				
+				F[getLocationMultidDim(n_listBot, r_listBot)] += fFirstChildValue * fSecondChildValue * coeff;
+				
+				/*
+				if (getLocationMultidDim(n_listBot, r_listBot)==0) {
+					System.out.println("Affichons pour y voir plus clair, JE SUIS A LINDICE 0 !!!\n");
+					
+					System.out.println("voici la valeur de coeff !!!" + coeff + "\n");
+					System.out.println("voici fFirstChildValue !!!" + fFirstChildValue + "\n");
+					System.out.println("voici fSecondChildValue !!!" + fSecondChildValue + "\n");				
+				    System.out.println("voici la valeur ajoutee !!!" + fFirstChildValue * fSecondChildValue * coeff + "\n");
+				    
+				    System.out.println("Voici n_listBot" + n_listBot+ "\n");
+					System.out.println("Voici r_listBot" + r_listBot+ "\n");
+					System.out.println("Voici la location correspondante ds F" + getLocationMultidDim(n_listBot, r_listBot)+ "\n");
+								
+					
+					System.out.println("Voici n_listTopFirstChild" + n_listTopFirstChild + "\n");
+					System.out.println("Voici r_listTopFirstChild" + r_listTopFirstChild + "\n");
+					System.out.println("Voici la location correspondante ds F" + fFirstChild.getLocationMultidDim(n_listTopFirstChild, r_listTopFirstChild)+ "\n");
+					
+					System.out.println("Voici n_listTopSecondChild" + n_listTopSecondChild + "\n");
+					System.out.println("Voici r_listTopSecondChild" + r_listTopSecondChild + "\n");
+					System.out.println("Voici la location correspondante ds F" + fSecondChild.getLocationMultidDim(n_listTopSecondChild, r_listTopSecondChild)+ "\n");
+						
+					System.out.println("Voici la valeur de locationFirstChild" + locationFirstChild + "\n");
+					System.out.println("Voici la valeur de locationSecondChild" + locationSecondChild + "\n");
+					
+					
+				}
+				*/
+ 			
+			       }
+				}
+			}
+		}		
+		
+
+		
+	}
+	
+	//end new version of fillF
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	/**STILL  TRYYYYYYYYY constructor for case 2*  
+	 * @return **/
+	/*
+	public  FMatrixAugmented(FMatrixAugmented fFirstChild, FMatrixAugmented fSecondChild, int branchFirstChild, 
+			int branchSecondChild, int branchNumber) {
+		
+		
+		//To begin let us initialize	
+		m_n_MultiDim = new ArrayList<Integer>(fFirstChild.m_n_MultiDim);	
+		branchNumbers= new ArrayList<Integer>(fFirstChild.branchNumbers);
+		branchLocations= new ArrayList<String>(fFirstChild.branchLocations);
+		isBranchAboveRetic= new ArrayList<Boolean>(fFirstChild.isBranchAboveRetic);		
+		
+	    int locationFirstChild=fFirstChild.getIndex(branchFirstChild);		
+		m_n_MultiDim.remove(locationFirstChild);
+		branchNumbers.remove(locationFirstChild);
+		branchLocations.remove(locationFirstChild);
+		isBranchAboveRetic.remove(locationFirstChild);
+				
+		int locationSecondChild=fSecondChild.getIndex(branchSecondChild);
+		
+		m_n_MultiDim.addAll(fSecondChild.m_n_MultiDim);
+		m_n_MultiDim.remove(fFirstChild.m_n_MultiDim.size()-1+locationSecondChild);
+		branchNumbers.addAll(fSecondChild.branchNumbers);
+		branchNumbers.remove(fFirstChild.m_n_MultiDim.size()-1+locationSecondChild);
+		branchLocations.addAll(fSecondChild.branchLocations);
+		branchLocations.remove(fFirstChild.m_n_MultiDim.size()-1+locationSecondChild);
+		isBranchAboveRetic.addAll(fSecondChild.isBranchAboveRetic);
+		isBranchAboveRetic.remove(fFirstChild.m_n_MultiDim.size()-1+locationSecondChild);
+	
+		m_n_MultiDim.add(fFirstChild.m_n_MultiDim.get(locationFirstChild) + fSecondChild.m_n_MultiDim.get(locationSecondChild));	
+		branchNumbers.add(branchNumber);
+		branchLocations.add("B");
+			
+		int minNumberLineages=0;
+		if ( (fFirstChild.branchNumbers.size()>1) &   (fSecondChild.branchNumbers.size()>1) ) {
+			isBranchAboveRetic.add(true);	
+			//there could be none lineage on that branch 
+		} else { isBranchAboveRetic.add(false);
+		//at least one lineage is going up
+		minNumberLineages=1;
+		}
+		
+		
+		//Note: our node of interest is at the end of the list !!!
+		//end of initialization
+		
+		//////////////////////////////
+		resizeMultiDim();//initialise F
+				
+		//fill in F				
+		
+		//be careful, n_listBot and r_listBot refers to the Bottom above the internal node
+		//that is why we use the locations at the end for those list		
+		List<Integer> n_listBot = new ArrayList<Integer>(m_n_MultiDim);
+		List<Integer> r_listBot = new ArrayList<Integer>(m_n_MultiDim);			
+		
+		//be careful, n_listTop and r_listTop refers to the top below the internal node		 
+		List<Integer> n_listTopFirstChild = new ArrayList<Integer>(fFirstChild.m_n_MultiDim);
+		List<Integer> r_listTopFirstChild = new ArrayList<Integer>(fFirstChild.m_n_MultiDim);		
+		
+		List<Integer> n_listTopSecondChild = new ArrayList<Integer>(fSecondChild.m_n_MultiDim);
+		List<Integer> r_listTopSecondChild = new ArrayList<Integer>(fSecondChild.m_n_MultiDim);		
+		
+		
+		recurseSet(n_listBot, r_listBot, 0,
+			n_listTopFirstChild, r_listTopFirstChild, 0,
+				n_listTopSecondChild, r_listTopSecondChild, 0,
+				fFirstChild, fSecondChild, locationFirstChild, locationSecondChild);
+		
+		
+		
+	}
+	
+	*/
+	
+	
+	/**END STILL  TRYYYYYYYYY constructor for case 2*  **/
+	
+	
+	
+	
+	
+	//////////////////////////////////////////////////////////////////////////////////////////
+		
+
+	void goToTopInternal(double u, double v, double gamma, double height ) {
+		//to go at the top of the  branch located at the end of the list of branchNumbers
+		
+		try {
+						
+			if (isBranchAboveRetic.get(branchNumbers.size()-1)) { 
+			// it is possible that no lineages are going up			
+				F=MatrixExponentiatorMultiDim.expQTtxTopInternalNoLineagePossible(m_n_MultiDim.get(m_n_MultiDim.size()-1),u, v, gamma, height, this);
+			}else {			
+				//at least one lineage is going up
+				F=MatrixExponentiatorMultiDim.expQTtxTopInternalAtLeastOneLineage(m_n_MultiDim.get(m_n_MultiDim.size()-1),u, v, gamma, height, this);			
+			}
+				
+			branchLocations.set(branchLocations.size()-1, "T");
+			
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+	
+	
+	
+	////////////////////////////////////////////////////////////
+	
+	
+
+	
+	
+	void goToBotTopRetic(double u, double v, double gamma, double height ) {
+		//to go at the top of the right  branch, above the reticulation node
+		//that is to say go from BotBot to BotTop
+		
+		// at this time, the right branch of the retic node is at the end of my lists
+		try {
+			
+			F=MatrixExponentiatorMultiDim.expQTtxBotTopRetic(m_n_MultiDim.get(m_n_MultiDim.size()-1),u, v, gamma, height, this);						
+			branchLocations.set(branchLocations.size()-1, "T");
+			
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+	
+	
+	
+	void goToTopTopRetic(double u, double v, double gamma, double height ) {
+		//to go at the top of the left  branch, above the reticulation node, assuming that we are already
+		//at the top of right branch
+		//that is to say go from BotTop to TopTop
+			
+		try {
+						
+		F=MatrixExponentiatorMultiDim.expQTtxTopTopRetic(m_n_MultiDim.get(m_n_MultiDim.size()-2),u, v, gamma, height, this);						
+		branchLocations.set(branchLocations.size()-2, "T");
+		// at this time, the right branch of the retic node is at the end of my list
+		//i.e. left branch is the last but one
+			
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+	
+	
+	
+	
+
+	
+	
+	void goToTopLeaf( double u, double v, double gamma, double height ) {
+				//to go at the top of a leaf branch
+		try {
+			
+			F = MatrixExponentiatorMultiDim.expQTtxTopLeaf(m_n_MultiDim.get(0),u, v, gamma, height, this);						
+			branchLocations.set(0, "T");
+			
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+	
+	
+	
+	
+	/** construct a leaf likelihood **/
+	public FMatrixAugmentedv1WithComments(int n, int nReds) {
+		//resize(n);
+		//nrList.add(n);
+		//nrList.add(nReds);
+		
+		m_n_MultiDim=new ArrayList<Integer>(Arrays.asList(n));
+		branchNumbers = new ArrayList<Integer>();
+		branchLocations = new ArrayList<String>();
+		isBranchAboveRetic = new ArrayList<Boolean>(Arrays.asList(false));
+		
+		resizeMultiDim();
+		if (n > 0) {
+			setMultiDim(Arrays.asList(n), Arrays.asList(nReds), 1.0);
+			//specific to leaf likelihood because of the 1
+						
+			//set(n, nReds, 1.0);
+		}
+		
+		
+	} // c'tor
+	
+	
+	
+	//public void assign(double [][] other) {
+	//	for(int i=1;i<=m_n;i++) {
+	//		System.arraycopy(other[i], 0, F , i*(i+1)/2-1 , i+1);
+	//	}
+	//} // copy
+	
+	void resize(int n) {
+		if (F != null && getSize() == n) {
+			// no need to resize, just init to zero
+			Arrays.fill(F, 0);
+		}
+		m_n = n;
+		F = new double[(n+1)*(n+2)/2-1];
+	} // resize
+	
+	
+
+	
+	
+	public double getMultiDim(List<Integer> n_List, List<Integer> r_List) 
+	{		 
+		return F[getLocationMultidDim(n_List, r_List)];
+	}
+	
+
+
+
+	public void setMultiDim(List<Integer> n_List, List<Integer> r_List, double f)
+	{
+		F[getLocationMultidDim(n_List, r_List)]=f;		
+	} 	
+	
+
+		void resizeMultiDim() {
+			
+			int product = 1; 
+			int ind=0;
+		     for (int i : m_n_MultiDim) {
+		     	
+		    	// System.out.println("Voila la valeur de  isBranchAboveRetic.get(ind)"+ isBranchAboveRetic.get(ind)+ "\n");
+		    	 
+		    	 if (!isBranchAboveRetic.get(ind))
+		    	 {
+		    	 System.out.println("JE passe ICI \n ");		         	
+		    	 product = product * ((i+1)*(i+2)/2-1);		    	 
+		    	 }else {
+		    		//deal with and edge above retic node 
+		    	product = product * ((i+1)*(i+2)/2);	
+		    	 }
+		    	ind ++; 
+		     }
+			     
+		     
+			F = new double[product];			
+		} // resize
+		
+		 
+		public int getLocationMultidDim(List<Integer> n_List, List<Integer> r_List) 
+		{		
+			int n_Lineage=0;
+			int r_Lineage=0;
+			int location=0;
+			
+			for (int j = 0; j < n_List.size(); j++) {				
+				n_Lineage=n_List.get(j);	 
+				r_Lineage = r_List.get(j);			
+			
+				if (!isBranchAboveRetic.get(j)) {		    	 				
+					location = location + (n_Lineage*(n_Lineage+1)/2 + r_Lineage -1) * calc(m_n_MultiDim,j+1);
+				} else {
+					location = location + (n_Lineage*(n_Lineage+1)/2 + r_Lineage) * calc(m_n_MultiDim,j+1);					
+				}
+			
+			}
+			
+			//System.out.println("in getLocationMultiDim, voici la location" + location + "\n");
+			return location;
+		}
+			
+		
+		
+
+		public int  calc(List<Integer> n_MultidDim, int ind) 
+		{
+			
+			int prod=1;
+			int n_Lineage=0;
+			for (int j = ind; j < n_MultidDim.size(); j++) {	
+				n_Lineage=n_MultidDim.get(j);
+			
+				if (!isBranchAboveRetic.get(j)) {
+					prod=prod*((n_Lineage+1)*(n_Lineage+2)/2 -1) ;			
+				} else {
+					prod=prod*((n_Lineage+1)*(n_Lineage+2)/2) ;	
+				}
+			}		
+			return prod;
+					
+		}
+		
+			/*
+		public int getListFromLocation(int loc) {
+			
+			
+			
+			
+			
+			
+			
+			
+			return 5;
+						
+		}
+		*/
+		
+		
+
+		@SuppressWarnings("null")
+		public FMatrixAugmentedv1WithComments getClone() {		
+						
+			FMatrixAugmentedv1WithComments myClone=new FMatrixAugmentedv1WithComments();			
+			myClone.branchLocations=new ArrayList<String>(this.branchLocations);
+			myClone.branchNumbers= new ArrayList<Integer>(this.branchNumbers);
+			myClone.isBranchAboveRetic= new ArrayList<Boolean>(this.isBranchAboveRetic);
+			myClone.m_n_MultiDim= new ArrayList<Integer>(this.m_n_MultiDim); 
+			myClone.F=new double[this.F.length];
+			System.arraycopy(this.F, 0, myClone.F, 0, F.length);
+		
+			return myClone;
+			
+			
+		}
+		
+		
+		public boolean compare (FMatrixAugmentedv1WithComments x) {
+						
+			return this.branchNumbers.containsAll(x.branchNumbers) && this.branchNumbers.size() == x.branchNumbers.size() ? true :false;						
+			
+		}
+		
+		
+	
+	
+	void rawresize(int n) {
+		if (F != null && getSize() == n) {
+			return;
+		}
+		m_n = n;
+		F = new double[(n+1)*(n+2)/2-1];
+	} // resize
+	
+
+	public void assign(FMatrixAugmentedv1WithComments other) {
+		int n = other.getSize();
+		rawresize(n);
+		if (getSize() != other.getSize()) {
+			System.err.println("diff in length " + getSize() +"!="+ other.getSize());
+		}
+		System.arraycopy(other.F, 0, F , 0 , F.length);
+	} // assign
+	
+	public String toString() {
+		int n = getSize();
+		StringBuffer buf = new StringBuffer(); 
+		for(int i=1;i<=n;i++) {
+			for(int r=0;r<=i;r++) {
+				buf.append(get(i,r)+" ");
+			}
+			buf.append(';');
+		} 
+		return buf.toString();
+	} // toString
+
+	
+
+	
+	//new constructor for case 4*  
+	public  FMatrixAugmentedv1WithComments(FMatrixAugmentedv1WithComments fFirstChild, int branchFirstChild, 
+			int branchSecondChild, int branchNumber, int nMax) {		
+		
+		// in this constructor, no need to have two FMatChild since they are equal !!!
+		
+		//To begin let us initialize	
+		m_n_MultiDim = new ArrayList<Integer>(fFirstChild.m_n_MultiDim);	
+		branchNumbers= new ArrayList<Integer>(fFirstChild.branchNumbers);
+		branchLocations= new ArrayList<String>(fFirstChild.branchLocations);
+		isBranchAboveRetic= new ArrayList<Boolean>(fFirstChild.isBranchAboveRetic);		
+	
+		//where are the first and second child in fFirstChild ? 
+		int locationFirstChild=fFirstChild.getIndex(branchFirstChild);
+		int locationSecondChild=fFirstChild.getIndex(branchSecondChild);
+			
+		int nbMax=nMax; //max number of lineages that go along this edge
+	
+		m_n_MultiDim.remove(locationFirstChild);
+		m_n_MultiDim.remove(locationSecondChild);
+		m_n_MultiDim.add(nbMax);
+		//we set the branch of interest at the end
+		
+		branchNumbers.remove(locationFirstChild);
+		branchNumbers.remove(locationSecondChild);
+		branchNumbers.add(branchNumber);
+		
+		branchLocations.remove(locationFirstChild);
+		branchLocations.remove(locationSecondChild);
+		branchLocations.add("B");
+		
+		isBranchAboveRetic.remove(locationFirstChild);
+		isBranchAboveRetic.remove(locationSecondChild);
+		
+		
+		if ( fFirstChild.branchNumbers.size() > 2 ) {
+			isBranchAboveRetic.add(true); //since it is possible to have no lineages along the edge
+		}else {
+			// fFirstChild.branchNumbers.size() is equal to 2
+			//at least one lineage is going up
+			isBranchAboveRetic.add(false); 
+		}
+		
+				
+		//////////////////////////////
+		resizeMultiDim();//initialise F
+					
+				
+		//be careful, n_listBot and r_listBot refers to the Bottom above the internal node
+		//we will use the locations at the end for those list		
+		List<Integer> n_listBot = new ArrayList<Integer>(m_n_MultiDim);
+		List<Integer> r_listBot = new ArrayList<Integer>(m_n_MultiDim);		
+		
+		
+		recurseGoodFourStars(n_listBot, r_listBot, 0, fFirstChild, locationFirstChild, locationSecondChild);		
+	
+	}
+		
+		
+	
+
+	// version de recurseGood  but that works for case Four stars!!!
+	public void recurseGoodFourStars(List<Integer> n_listBot, List<Integer> r_listBot, int i, 
+			FMatrixAugmentedv1WithComments fFirstChild,  int locationFirstChild, int locationSecondChild) {
+					//it gives  a n_listBot and a r_listBot !!!
+		
+		//we do not set the last dimension for
+		//  n_listBot and r_lisBot since the last dimension will be initialized later in fillFFourStars
+		// so we use m_n_MultiDim.size()-1 as a terminal condition  !
+ 
+			if (i== (m_n_MultiDim.size()-1) ) {
+			
+				System.out.println("Ds RecurseGoodFourStars, Voici n_listBot" + n_listBot+ "\n");
+				System.out.println("Ds RecurseGoodFourStars, Voici r_listBot" + r_listBot+ "\n");
+								
+				fillFFourStars(fFirstChild,  n_listBot, r_listBot, locationFirstChild, locationSecondChild);
+			
+			} else {
+		
+				int minNumberLineages= isBranchAboveRetic.get(i)==true ? 0 :1;
+				// to know if at least 1 lineage go up, or if it is possible to have 0 lineage 			
+				for (int j = minNumberLineages; j <= m_n_MultiDim.get(i); j++) {				
+					n_listBot.set(i, j);				
+					for (int k = 0; k <= j; k++) {					
+						r_listBot.set(i, k);			
+						recurseGoodFourStars(n_listBot, r_listBot, i+1, fFirstChild, 
+							locationFirstChild, locationSecondChild);					
+					}						
+				}
+		
+			}
+	
+		
+	}
+	
+		
+	//new version for FillF for an internal node , case 4*
+	
+		public void fillFFourStars(FMatrixAugmentedv1WithComments fFirstChild, 
+				List<Integer> n_listBot, List<Integer> r_listBot, 
+				int locationFirstChild, int locationSecondChild) {
+			
+			//locationFirstChild is the location of First Child in the Fmatrix fFirstChild
+			//locationSecondChild is the location of Second Child in the Fmatrix fFirstChild
+			
+			Num C=new Num(); //for computing combinations			 
+			double fFirstAndSecondChildValue=0;
+			double coeff=0;
+		
+			List<Integer> n_listTopFirstAndSecondChild = new ArrayList<Integer>(fFirstChild.m_n_MultiDim);
+			List<Integer> r_listTopFirstAndSecondChild = new ArrayList<Integer>(fFirstChild.m_n_MultiDim);		
+			//n_listTopFirstAndSecondChild will be the n_list for First Child  and Second Child
+			//r_listTopFirstAndSecondChild will be the r_list for First Child  and Second Child
+			
+			
+			int minNumberLineagesFirstChild=  fFirstChild.isBranchAboveRetic.get(locationFirstChild)==true ? 0 :1;
+			int minNumberLineagesSecondChild=  fFirstChild.isBranchAboveRetic.get(locationSecondChild)==true ? 0 :1;
+			int maxNumberLineagesFirstChild=fFirstChild.m_n_MultiDim.get(locationFirstChild);
+			int maxNumberLineagesSecondChild=fFirstChild.m_n_MultiDim.get(locationSecondChild);					
+			
+			int minNumberLineages= isBranchAboveRetic.get(isBranchAboveRetic.size()-1)==true ? 0:1;
+			
+						
+			//initialize n_listTopFirstAndSecondChild, r_listTopFirstAndSecondChild 
+			// with nBot and rBot   
+					
+			// all the branches contained in n_listTopFirstAndSecondChild are contained in n_Bot
+			//excepted the branch corresponding to First Child and Second Child
+			
+			for (int i=0; i<fFirstChild.branchNumbers.size(); i++) {			
+				int branchNb =fFirstChild.branchNumbers.get(i);			
+				
+				if ( (branchNb !=  fFirstChild.branchNumbers.get(locationFirstChild)) &&  (branchNb !=  fFirstChild.branchNumbers.get(locationSecondChild)) )
+				{
+				int idBranchInBot = this.branchNumbers.indexOf(branchNb); 
+				n_listTopFirstAndSecondChild.set(i,n_listBot.get(idBranchInBot)); 	
+				r_listTopFirstAndSecondChild.set(i,r_listBot.get(idBranchInBot)); 	}		
+			
+			}
+		
+			
+			for (int s = minNumberLineages; s <= m_n_MultiDim.get(m_n_MultiDim.size()-1); s++) {
+				//s lineages at the bottom of the edge of interest
+													
+				n_listBot.set(n_listBot.size()-1, s);
+				
+				for (int k = 0; k <= s; k++) {
+					//k red lineages among the s 
+					
+					r_listBot.set(r_listBot.size()-1, k);
+												
+					for (int j= Math.max(minNumberLineagesFirstChild, s-maxNumberLineagesSecondChild) ; j<=Math.min(s-minNumberLineagesSecondChild, maxNumberLineagesFirstChild); j++) {						
+						// j among s lineages come from first child
+						
+						n_listTopFirstAndSecondChild.set(locationFirstChild, j);
+						n_listTopFirstAndSecondChild.set(locationSecondChild, s-j);
+																	
+						for (int m =Math.max(0, Math.max(-s+j+k,k-fFirstChild.m_n_MultiDim.get(locationSecondChild))); m <= Math.min(j,k); m++) {
+							// m red lineages among the j lineages of the first child
+							
+							
+							r_listTopFirstAndSecondChild.set(locationFirstChild, m);
+							r_listTopFirstAndSecondChild.set(locationSecondChild, k-m);					 									
+							fFirstAndSecondChildValue = fFirstChild.getF()[fFirstChild.getLocationMultidDim(n_listTopFirstAndSecondChild, r_listTopFirstAndSecondChild)];
+					 
+							coeff= C.combination(k,m) * C.combination(s-k,j-m) / C.combination(s,j);		
+					
+							F[getLocationMultidDim(n_listBot, r_listBot)] += fFirstAndSecondChildValue * coeff;
+		
+	 			
+				       }
+					}
+				}
+			}		
+			
+
+			
+		}
+		
+//end new version analogue of fillF but case 4stars
+		
+	
+		
+	
+	
+} // class FMatrixAugmented

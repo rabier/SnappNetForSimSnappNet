@@ -1,0 +1,908 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuite errors="0" failures="0" hostname="phylmol-145" name="test.beast.app.BeautiTest" skipped="0" tests="3" time="11.319" timestamp="2018-04-09T13:18:04">
+  <properties>
+    <property name="java.vendor" value="Oracle Corporation" />
+    <property name="sun.java.launcher" value="SUN_STANDARD" />
+    <property name="BEAUti_name" value="BEAUti" />
+    <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers" />
+    <property name="dist" value="/home/cerabier/workspace-beast2/beast2/build/dist" />
+    <property name="lib" value="/home/cerabier/workspace-beast2/beast2/lib" />
+    <property name="os.name" value="Linux" />
+    <property name="sun.boot.class.path" value="/usr/lib/jvm/java-8-oracle/jre/lib/resources.jar:/usr/lib/jvm/java-8-oracle/jre/lib/rt.jar:/usr/lib/jvm/java-8-oracle/jre/lib/sunrsasign.jar:/usr/lib/jvm/java-8-oracle/jre/lib/jsse.jar:/usr/lib/jvm/java-8-oracle/jre/lib/jce.jar:/usr/lib/jvm/java-8-oracle/jre/lib/charsets.jar:/usr/lib/jvm/java-8-oracle/jre/lib/jfr.jar:/usr/lib/jvm/java-8-oracle/jre/classes" />
+    <property name="AppStore_name" value="AppStore" />
+    <property name="report" value="build/junitreport" />
+    <property name="common_dir" value="release/common" />
+    <property name="sun.desktop" value="gnome" />
+    <property name="java.vm.specification.vendor" value="Oracle Corporation" />
+    <property name="ant.home" value="/home/cerabier/.p2/pool/plugins/org.apache.ant_1.10.1.v20170504-0840" />
+    <property name="java.runtime.version" value="1.8.0_121-b13" />
+    <property name="main_class_BEAST" value="beast.app.beastapp.BeastMain" />
+    <property name="Mac_package_dir" value="release/Mac/BEAST" />
+    <property name="user.name" value="cerabier" />
+    <property name="AppleSigner" value="Developer ID Application: Remco Bouckaert (LHFJWE5U63)" />
+    <property name="LogAnalyser_name" value="LogAnalyser" />
+    <property name="user.language" value="en" />
+    <property name="build" value="/home/cerabier/workspace-beast2/beast2/build" />
+    <property name="sun.boot.library.path" value="/usr/lib/jvm/java-8-oracle/jre/lib/amd64" />
+    <property name="ant.project.default-target" value="build_jar_all_BEAST" />
+    <property name="tools_dir" value="release/common/tools" />
+    <property name="ant.project.name" value="BUILD_BEAST_2" />
+    <property name="java.version" value="1.8.0_121" />
+    <property name="version" value="2.4.7" />
+    <property name="user.timezone" value="" />
+    <property name="sun.arch.data.model" value="64" />
+    <property name="Linux_dir" value="release/Linux" />
+    <property name="java.endorsed.dirs" value="/usr/lib/jvm/java-8-oracle/jre/lib/endorsed" />
+    <property name="doc" value="/home/cerabier/workspace-beast2/beast2/doc" />
+    <property name="version_number" value="2.4.7" />
+    <property name="sun.cpu.isalist" value="" />
+    <property name="sun.jnu.encoding" value="UTF-8" />
+    <property name="file.encoding.pkg" value="sun.io" />
+    <property name="file.separator" value="/" />
+    <property name="java.specification.name" value="Java Platform API Specification" />
+    <property name="java.class.version" value="52.0" />
+    <property name="src" value="/home/cerabier/workspace-beast2/beast2/src" />
+    <property name="Mac_bundle_dir" value="release/Mac/BEAST/BEAST" />
+    <property name="user.country" value="US" />
+    <property name="java.home" value="/usr/lib/jvm/java-8-oracle/jre" />
+    <property name="java.vm.info" value="mixed mode" />
+    <property name="Mac_dir" value="release/Mac" />
+    <property name="ant.file" value="/home/cerabier/workspace-beast2/beast2/build.xml" />
+    <property name="os.version" value="3.13.0-96-generic" />
+    <property name="release_dir" value="release" />
+    <property name="path.separator" value=":" />
+    <property name="java.vm.version" value="25.121-b13" />
+    <property name="ant.library.dir" value="/home/cerabier/.p2/pool/plugins/org.apache.ant_1.10.1.v20170504-0840/lib" />
+    <property name="java.awt.printerjob" value="sun.print.PSPrinterJob" />
+    <property name="sun.io.unicode.encoding" value="UnicodeLittle" />
+    <property name="beast1_dir" value="release/common/beast1" />
+    <property name="awt.toolkit" value="sun.awt.X11.XToolkit" />
+    <property name="BEAST_name" value="BEAST" />
+    <property name="TreeAnnotator_name" value="TreeAnnotator" />
+    <property name="user.home" value="/home/cerabier" />
+    <property name="java.specification.vendor" value="Oracle Corporation" />
+    <property name="test" value="/home/cerabier/workspace-beast2/beast2/test" />
+    <property name="ant.file.BUILD_BEAST_2" value="/home/cerabier/workspace-beast2/beast2/build.xml" />
+    <property name="java.library.path" value="/usr/java/packages/lib/amd64:/usr/lib64:/lib64:/lib:/usr/lib" />
+    <property name="java.vendor.url" value="http://java.oracle.com/" />
+    <property name="java.vm.vendor" value="Oracle Corporation" />
+    <property name="copyright" value="Beast 2 development team 2011-2017" />
+    <property name="java.runtime.name" value="Java(TM) SE Runtime Environment" />
+    <property name="sun.java.command" value="org.apache.tools.ant.taskdefs.optional.junit.JUnitTestRunner test.beast.app.BeautiTest skipNonTests=false filtertrace=true haltOnError=false haltOnFailure=false formatter=org.apache.tools.ant.taskdefs.optional.junit.SummaryJUnitResultFormatter showoutput=false outputtoformatters=true logfailedtests=true threadid=0 logtestlistenerevents=false formatter=org.apache.tools.ant.taskdefs.optional.junit.XMLJUnitResultFormatter,/home/cerabier/workspace-beast2/beast2/build/junitreport/TEST-test.beast.app.BeautiTest.xml crashfile=/home/cerabier/workspace-beast2/beast2/junitvmwatcher1965238770807259268.properties propsfile=/home/cerabier/workspace-beast2/beast2/junit921324898748408921.properties" />
+    <property name="java.class.path" value="/home/cerabier/workspace-beast2/beast2/lib/beagle.jar:/home/cerabier/workspace-beast2/beast2/lib/jam.jar:/home/cerabier/workspace-beast2/beast2/lib/colt.jar:/home/cerabier/workspace-beast2/beast2/lib/fest.jar:/home/cerabier/workspace-beast2/beast2/lib/junit-4.8.2.jar:/home/cerabier/workspace-beast2/beast2/lib/antlr-runtime-4.5.jar:/home/cerabier/workspace-beast2/beast2/build:/home/cerabier/.p2/pool/plugins/org.apache.ant_1.10.1.v20170504-0840/lib/ant-launcher.jar:/home/cerabier/.p2/pool/plugins/org.apache.ant_1.10.1.v20170504-0840/lib/ant.jar:/home/cerabier/.p2/pool/plugins/org.apache.ant_1.10.1.v20170504-0840/lib/ant-junit.jar:/home/cerabier/.p2/pool/plugins/org.apache.ant_1.10.1.v20170504-0840/lib/ant-junit4.jar" />
+    <property name="ant.version" value="Apache Ant(TM) version 1.10.1 compiled on February 2 2017" />
+    <property name="sdk_dir" value="release/BEAST_SDK" />
+    <property name="ant.file.type.BUILD_BEAST_2" value="file" />
+    <property name="java.vm.specification.name" value="Java Virtual Machine Specification" />
+    <property name="java.vm.specification.version" value="1.8" />
+    <property name="sun.os.patch.level" value="unknown" />
+    <property name="sun.cpu.endian" value="little" />
+    <property name="Linux_package_dir" value="release/Linux/beast" />
+    <property name="java.io.tmpdir" value="/tmp" />
+    <property name="beast_name" value="beast" />
+    <property name="java.vendor.url.bug" value="http://bugreport.sun.com/bugreport/" />
+    <property name="java.awt.graphicsenv" value="sun.awt.X11GraphicsEnvironment" />
+    <property name="os.arch" value="amd64" />
+    <property name="java.ext.dirs" value="/usr/lib/jvm/java-8-oracle/jre/lib/ext:/usr/java/packages/lib/ext" />
+    <property name="user.dir" value="/home/cerabier/workspace-beast2/beast2" />
+    <property name="line.separator" value="&#xa;" />
+    <property name="java.vm.name" value="Java HotSpot(TM) 64-Bit Server VM" />
+    <property name="basedir" value="/home/cerabier/workspace-beast2/beast2" />
+    <property name="ant.java.version" value="1.8" />
+    <property name="ant.core.lib" value="/home/cerabier/.p2/pool/plugins/org.apache.ant_1.10.1.v20170504-0840/lib/ant.jar" />
+    <property name="Windows_dir" value="release/Windows" />
+    <property name="LogCombiner_name" value="LogCombiner" />
+    <property name="file.encoding" value="UTF-8" />
+    <property name="java.specification.version" value="1.8" />
+    <property name="ant.project.invoked-targets" value="build_jar_all_BEAST" />
+    <property name="Windows_package_dir" value="release/Windows/BEAST" />
+  </properties>
+  <testcase classname="test.beast.app.BeautiTest" name="testStandarBatchMode" time="10.667" />
+  <testcase classname="test.beast.app.BeautiTest" name="testCustomBatchMode" time="0.262" />
+  <testcase classname="test.beast.app.BeautiTest" name="testStarBeastBatchMode" time="0.353" />
+  <system-out><![CDATA[Investigating /home/cerabier/.beast/2.4/SNAPP
+Investigating /home/cerabier/.beast/2.4/BEAST
+Investigating /home/cerabier/.p2/pool/plugins/org.apache.ant_1.10.1.v20170504-0840
+Investigating .
+Investigating /home/cerabier/workspace-beast2/beast2
+Investigating /home/cerabier/.beast/2.4/SNAPP
+Investigating /home/cerabier/.beast/2.4/BEAST
+Investigating /home/cerabier/.p2/pool/plugins/org.apache.ant_1.10.1.v20170504-0840
+Investigating .
+Investigating /home/cerabier/workspace-beast2/beast2
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Cow: 705 4
+Carp: 705 4
+Chicken: 705 4
+Human: 705 4
+Loach: 705 4
+Mouse: 705 4
+Rat: 705 4
+Seal: 705 4
+Whale: 705 4
+Frog: 705 4
+Alignment(null)
+  10 taxa
+  705 sites
+  358 patterns
+
+===============================================================================
+Citations for this model:
+
+Bouckaert RR, Heled J, Kuehnert D, Vaughan TG, Wu C-H, Xie D, Suchard MA,
+  Rambaut A, Drummond AJ (2014) BEAST 2: A software platform for Bayesian
+  evolutionary analysis. PLoS Computational Biology 10(4): e1003537
+
+===============================================================================
+Je suis au debut de initAndValidate du MCMC.java de Beast2
+J ai fini de recuperer tous mes operateurs ds initAndValidate du MCMC.java de Beast2
+TreeLikelihood(treeLikelihood.dna0) uses BeerLikelihoodCore4
+  Alignment(dna): [taxa, patterns, sites] = [10, 358, 705]
+Investigating /home/cerabier/.beast/2.4/SNAPP
+Investigating /home/cerabier/.beast/2.4/BEAST
+Investigating /home/cerabier/.p2/pool/plugins/org.apache.ant_1.10.1.v20170504-0840
+Investigating .
+Investigating /home/cerabier/workspace-beast2/beast2
+Investigating /home/cerabier/.beast/2.4/SNAPP
+Investigating /home/cerabier/.beast/2.4/BEAST
+Investigating /home/cerabier/.p2/pool/plugins/org.apache.ant_1.10.1.v20170504-0840
+Investigating .
+Investigating /home/cerabier/workspace-beast2/beast2
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Anolis_ahli: 1456 4
+Anolis_aliniger: 1456 4
+Anolis_alutaceus: 1456 4
+Anolis_angusticeps: 1456 4
+Anolis_bahorucoensis: 1456 4
+Anolis_barahonae: 1456 4
+Anolis_brevirostris: 1456 4
+Anolis_coelestinus: 1456 4
+Anolis_cristatellus: 1456 4
+Anolis_cuvieri: 1456 4
+Anolis_distichus: 1456 4
+Anolis_equestris: 1456 4
+Anolis_garmani: 1456 4
+Anolis_grahami: 1456 4
+Anolis_insolitus: 1456 4
+Anolis_krugi: 1456 4
+Anolis_lineatopus: 1456 4
+Anolis_loysiana: 1456 4
+Anolis_luteogularis: 1456 4
+Anolis_marcanoi: 1456 4
+Anolis_occultus: 1456 4
+Anolis_olssoni: 1456 4
+Anolis_ophiolepis: 1456 4
+Anolis_paternus: 1456 4
+Anolis_sagrei: 1456 4
+Anolis_strahmi: 1456 4
+Anolis_stratulus: 1456 4
+Anolis_valencienni: 1456 4
+Anolis_vanidicus: 1456 4
+Alignment(null)
+  29 taxa
+  1456 sites
+  934 patterns
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+human: 768 4
+chimp: 768 4
+Alignment(data)
+  2 taxa
+  768 sites
+  10 patterns
+
+Starting frequencies: [0.34428383705057364, 0.2450722733248829, 0.14783180026923895, 0.2628120893553045]
+TreeLikelihood(treeLikelihood) uses BeerLikelihoodCore4
+  Alignment(data): [taxa, patterns, sites] = [2, 10, 768]
+===============================================================================
+Citations for this model:
+
+Bouckaert RR, Heled J, Kuehnert D, Vaughan TG, Wu C-H, Xie D, Suchard MA,
+  Rambaut A, Drummond AJ (2014) BEAST 2: A software platform for Bayesian
+  evolutionary analysis. PLoS Computational Biology 10(4): e1003537
+
+Hasegawa M, Kishino H, Yano T (1985) Dating the human-ape splitting by a
+  molecular clock of mitochondrial DNA. Journal of Molecular Evolution
+  22:160-174.
+
+===============================================================================
+Je suis au debut de initAndValidate du MCMC.java de Beast2
+J ai fini de recuperer tous mes operateurs ds initAndValidate du MCMC.java de Beast2
+Investigating /home/cerabier/.beast/2.4/SNAPP
+Investigating /home/cerabier/.beast/2.4/BEAST
+Investigating /home/cerabier/.p2/pool/plugins/org.apache.ant_1.10.1.v20170504-0840
+Investigating .
+Investigating /home/cerabier/workspace-beast2/beast2
+Investigating /home/cerabier/.beast/2.4/SNAPP
+Investigating /home/cerabier/.beast/2.4/BEAST
+Investigating /home/cerabier/.p2/pool/plugins/org.apache.ant_1.10.1.v20170504-0840
+Investigating .
+Investigating /home/cerabier/workspace-beast2/beast2
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Orthogeomys_heterodus: 614 4
+Thomomys_bottae_awahnee_a: 614 4
+Thomomys_bottae_awahnee_b: 614 4
+Thomomys_bottae_xerophilus: 614 4
+Thomomys_bottae_cactophilus: 614 4
+Thomomys_bottae_albatus: 614 4
+Thomomys_bottae_ruidosae: 614 4
+Thomomys_bottae_bottae: 614 4
+Thomomys_bottae_alpinus: 614 4
+Thomomys_bottae_riparius: 614 4
+Thomomys_bottae_mewa: 614 4
+Thomomys_bottae_saxatilis: 614 4
+Thomomys_bottae_laticeps: 614 4
+Thomomys_talpoides_ocius: 614 4
+Thomomys_idahoensis_pygmaeus_a: 614 4
+Thomomys_idahoensis_pygmaeus_b: 614 4
+Thomomys_mazama_mazama: 614 4
+Thomomys_mazama_nasicus: 614 4
+Thomomys_monticola_a: 614 4
+Thomomys_monticola_b: 614 4
+Thomomys_talpoides_yakimensis: 614 4
+Thomomys_talpoides_bridgeri: 614 4
+Thomomys_townsendii_townsendii: 614 4
+Thomomys_townsendii_relictus: 614 4
+Thomomys_umbrinus_chihuahuae: 614 4
+Thomomys_umbrinus_atroavarius: 614 4
+Alignment(null)
+  26 taxa
+  614 sites
+  144 patterns
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Je suis juste apres replaceAll ds Sequence.java 
+
+Orthogeomys_heterodus: 601 4
+Thomomys_bottae_awahnee_a: 601 4
+Thomomys_bottae_awahnee_b: 601 4
+Thomomys_bottae_xerophilus: 601 4
+Thomomys_bottae_cactophilus: 601 4
+Thomomys_bottae_albatus: 601 4
+Thomomys_bottae_ruidosae: 601 4
+Thomomys_bottae_bottae: 601 4
+Thomomys_bottae_alpinus: 601 4
+Thomomys_bottae_riparius: 601 4
+Thomomys_bottae_mewa: 601 4
+Thomomys_bottae_saxatilis: 601 4
+Thomomys_bottae_laticeps: 601 4
+Thomomys_talpoides_ocius: 601 4
+Thomomys_idahoensis_pygmaeus_a: 601 4
+Thomomys_idahoensis_pygmaeus_b: 601 4
+Thomomys_mazama_mazama: 601 4
+Thomomys_mazama_nasicus: 601 4
+Thomomys_monticola_a: 601 4
+Thomomys_monticola_b: 601 4
+Thomomys_talpoides_yakimensis: 601 4
+Thomomys_talpoides_bridgeri: 601 4
+Thomomys_townsendii_townsendii: 601 4
+Thomomys_townsendii_relictus: 601 4
+Thomomys_umbrinus_chihuahuae: 601 4
+Thomomys_umbrinus_atroavarius: 601 4
+Alignment(null)
+  26 taxa
+  601 sites
+  71 patterns
+
+===============================================================================
+Citations for this model:
+
+Bouckaert RR, Heled J, Kuehnert D, Vaughan TG, Wu C-H, Xie D, Suchard MA,
+  Rambaut A, Drummond AJ (2014) BEAST 2: A software platform for Bayesian
+  evolutionary analysis. PLoS Computational Biology 10(4): e1003537
+
+===============================================================================
+Je suis au debut de initAndValidate du MCMC.java de Beast2
+J ai fini de recuperer tous mes operateurs ds initAndValidate du MCMC.java de Beast2
+TreeLikelihood(treeLikelihood.26) uses BeerLikelihoodCore4
+  Alignment(26): [taxa, patterns, sites] = [26, 144, 614]
+TreeLikelihood(treeLikelihood.29) uses BeerLikelihoodCore4
+  Alignment(29): [taxa, patterns, sites] = [26, 71, 601]
+]]></system-out>
+  <system-err><![CDATA[Loading package BEAST v2.4.7
+Loading package BEAST v2.4.5
+Loading package SNAPP v1.3.0
+Loading template /home/cerabier/workspace-beast2/beast2/templates/Standard.xml
+Processing /home/cerabier/.beast/2.4/SNAPP/templates/SNAPP.xml
+Processing /home/cerabier/.beast/2.4/BEAST/templates/ClockModels.xml
+Processing /home/cerabier/.beast/2.4/BEAST/templates/StarBeast.xml
+Processing /home/cerabier/.beast/2.4/BEAST/templates/ParametricDistributions.xml
+Processing /home/cerabier/.beast/2.4/BEAST/templates/Standard.xml
+Processing /home/cerabier/.beast/2.4/BEAST/templates/TreePriors.xml
+Processing /home/cerabier/.beast/2.4/BEAST/templates/SubstModels.xml
+Skipping /home/cerabier/workspace-beast2/beast2/./templates/ClockModels.xml since ClockModels.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/./templates/StarBeast.xml since StarBeast.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/./templates/ParametricDistributions.xml since ParametricDistributions.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/./templates/Standard.xml since Standard.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/./templates/TreePriors.xml since TreePriors.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/./templates/SubstModels.xml since SubstModels.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/templates/ClockModels.xml since ClockModels.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/templates/StarBeast.xml since StarBeast.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/templates/ParametricDistributions.xml since ParametricDistributions.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/templates/TreePriors.xml since TreePriors.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/templates/SubstModels.xml since SubstModels.xml is already processed
+Loading package BEAST v2.4.7
+Loading package BEAST v2.4.5
+Loading package SNAPP v1.3.0
+Loading template /home/cerabier/workspace-beast2/beast2/templates/Standard.xml
+Processing /home/cerabier/.beast/2.4/SNAPP/templates/SNAPP.xml
+Processing /home/cerabier/.beast/2.4/BEAST/templates/ClockModels.xml
+Processing /home/cerabier/.beast/2.4/BEAST/templates/StarBeast.xml
+Processing /home/cerabier/.beast/2.4/BEAST/templates/ParametricDistributions.xml
+Processing /home/cerabier/.beast/2.4/BEAST/templates/Standard.xml
+Processing /home/cerabier/.beast/2.4/BEAST/templates/TreePriors.xml
+Processing /home/cerabier/.beast/2.4/BEAST/templates/SubstModels.xml
+Skipping /home/cerabier/workspace-beast2/beast2/./templates/ClockModels.xml since ClockModels.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/./templates/StarBeast.xml since StarBeast.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/./templates/ParametricDistributions.xml since ParametricDistributions.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/./templates/Standard.xml since Standard.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/./templates/TreePriors.xml since TreePriors.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/./templates/SubstModels.xml since SubstModels.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/templates/ClockModels.xml since ClockModels.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/templates/StarBeast.xml since StarBeast.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/templates/ParametricDistributions.xml since ParametricDistributions.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/templates/TreePriors.xml since TreePriors.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/templates/SubstModels.xml since SubstModels.xml is already processed
+map
+map
+map
+map
+map
+map
+map
+map
+map
+map
+map
+map
+beauticonfig
+fragment
+run
+Warning: at least one operator required to run the MCMC properly, but none found.
+template item TreeOperators is ignored
+plugin
+beast.evolution.sitemodel.SiteModel.substModel: java.lang.ClassCastException: beast.evolution.sitemodel.SiteModel cannot be cast to beast.evolution.substitutionmodel.SubstitutionModel
+plugin
+Adding beast.evolution.substitutionmodel.JukesCantor JC69.s:dna
+plugin
+prior
+prior
+taxonset
+plugin
+plugin
+plugin
+plugin
+logger
+operator
+operator
+operator
+operator
+operator
+operator
+operator
+operator
+operator
+operator
+operator
+prior
+prior
+prior
+operator
+operator
+upDownOperator
+Failed to load BEAGLE library: no hmsbeagle-jni in java.library.path
+Adding beast.evolution.sitemodel.SiteModel SiteModel.s:dna
+Adding beast.evolution.likelihood.ThreadedTreeLikelihood treeLikelihood.dna
+Adding beast.math.distributions.Prior ClockPrior.c:dna
+Adding beast.math.distributions.Prior MutationRatePrior.s:dna
+Adding beast.evolution.alignment.TaxonSet 	TaxonSet.dna
+
+Adding beast.evolution.tree.Tree ((((2:0.41599610983859964,((9:0.20930984813622708,1:0.20930984813622708)10:0.09693453634165242,(5:0.13923184370953323,8:0.13923184370953323)11:0.16701254076834626)12:0.10975172536072014)13:0.04670083273232911,3:0.46269694257092875)14:0.6706305190857192,(0:0.37315115671054255,(6:0.11122982605941137,4:0.11122982605941137)15:0.2619213306511312)16:0.7601763049461054)17:0.5354870611084928,7:1.6688145227651408)18:0.0
+Adding beast.evolution.tree.RandomTree ((((2:0.41599610983859964,((9:0.20930984813622708,1:0.20930984813622708)10:0.09693453634165242,(5:0.13923184370953323,8:0.13923184370953323)11:0.16701254076834626)12:0.10975172536072014)13:0.04670083273232911,3:0.46269694257092875)14:0.6706305190857192,(0:0.37315115671054255,(6:0.11122982605941137,4:0.11122982605941137)15:0.2619213306511312)16:0.7601763049461054)17:0.5354870611084928,7:1.6688145227651408)18:0.0
+Adding beast.evolution.speciation.YuleModel YuleModel.t:dna
+Adding beast.evolution.tree.TreeHeightLogger TreeHeight.t:dna
+Adding beast.core.Logger treelog.t:dna
+Adding beast.evolution.operators.ScaleOperator ScaleOperator(proportionInvariantScaler.s:dna)                             0.5000          0          0        NaN 
+Adding beast.evolution.operators.ScaleOperator ScaleOperator(mutationRateScaler.s:dna)                                    0.5000          0          0        NaN 
+Adding beast.evolution.operators.ScaleOperator ScaleOperator(gammaShapeScaler.s:dna)                                      0.5000          0          0        NaN 
+Adding beast.evolution.operators.TipDatesRandomWalker TipDatesRandomWalker(allTipDatesRandomWalker.t:dna)                        1.0000          0          0        NaN 
+Adding beast.evolution.operators.ScaleOperator ScaleOperator(YuleModelTreeScaler.t:dna)                                   0.5000          0          0        NaN 
+Adding beast.evolution.operators.ScaleOperator ScaleOperator(YuleModelTreeRootScaler.t:dna)                               0.5000          0          0        NaN 
+Adding beast.evolution.operators.Uniform Uniform(YuleModelUniformOperator.t:dna)                                         -          0          0        NaN 
+Adding beast.evolution.operators.SubtreeSlide SubtreeSlide(YuleModelSubtreeSlide.t:dna)                                  1.0000          0          0        NaN 
+Adding beast.evolution.operators.Exchange Exchange(YuleModelNarrow.t:dna)                                                 -          0          0        NaN 
+Adding beast.evolution.operators.Exchange Exchange(YuleModelWide.t:dna)                                                   -          0          0        NaN 
+Adding beast.evolution.operators.WilsonBalding WilsonBalding(YuleModelWilsonBalding.t:dna)                                     -          0          0        NaN 
+Adding beast.math.distributions.Prior YuleBirthRatePrior.t:dna
+Adding beast.math.distributions.Prior GammaShapePrior.s:dna
+Adding beast.math.distributions.Prior PropInvariantPrior.s:dna
+Adding beast.evolution.operators.ScaleOperator ScaleOperator(YuleBirthRateScaler.t:dna)                                   0.7500          0          0        NaN 
+Adding beast.evolution.operators.ScaleOperator ScaleOperator(StrictClockRateScaler.c:dna)                                 0.7500          0          0        NaN 
+Adding beast.evolution.operators.UpDownOperator UpDownOperator(strictClockUpDownOperator.c:dna)                            0.7500          0          0        NaN 
+>>> No description for connector YuleModel.t:$(n) == prior
+>>> No description for connector ClockPrior.c:$(n) == prior
+>>> No description for connector MutationRatePrior.s:$(n) == prior
+>>> No description for connector GammaShapePrior.s:$(n) == prior
+>>> No description for connector PropInvariantPrior.s:$(n) == prior
+>>> No description for connector YuleBirthRatePrior.t:$(n) == prior
+PARTITIONS0:
+
+[[0], [0], [0]]
+Could not find beastObject with id treeLikelihood.Species. Typo in template perhaps?
+
+PARTITIONS0:
+
+[[0], [0], [0]]
+tree
+Adding beast.evolution.tree.RandomTree ((((2:0.41599610983859964,((9:0.20930984813622708,1:0.20930984813622708)10:0.09693453634165242,(5:0.13923184370953323,8:0.13923184370953323)11:0.16701254076834626)12:0.10975172536072014)13:0.04670083273232911,3:0.46269694257092875)14:0.6706305190857192,(0:0.37315115671054255,(6:0.11122982605941137,4:0.11122982605941137)15:0.2619213306511312)16:0.7601763049461054)17:0.5354870611084928,7:1.6688145227651408)18:0.0
+branchRateModel
+operator
+upDownOperator
+prior
+Adding beast.evolution.branchratemodel.StrictClockModel StrictClock.c:dna
+Adding beast.evolution.operators.ScaleOperator ScaleOperator(StrictClockRateScaler.c:dna)                                 0.7500          0          0        NaN 
+Adding beast.evolution.operators.UpDownOperator UpDownOperator(strictClockUpDownOperator.c:dna)                            0.7500          0          0        NaN 
+Adding beast.math.distributions.Prior ClockPrior.c:dna
+>>> No description for connector ClockPrior.c:$(n) == prior
+PARTITIONS:
+
+[[0], [0], [0]]
+Loading template /home/cerabier/workspace-beast2/beast2/test/template123x666.xml
+Processing /home/cerabier/.beast/2.4/SNAPP/templates/SNAPP.xml
+Processing /home/cerabier/.beast/2.4/BEAST/templates/ClockModels.xml
+Cannot find merge point named clockModelTemplates from ClockModels.xml in template. MergeWith ignored.
+Processing /home/cerabier/.beast/2.4/BEAST/templates/StarBeast.xml
+Processing /home/cerabier/.beast/2.4/BEAST/templates/ParametricDistributions.xml
+Cannot find merge point named parametricDistributions from ParametricDistributions.xml in template. MergeWith ignored.
+Processing /home/cerabier/.beast/2.4/BEAST/templates/Standard.xml
+Processing /home/cerabier/.beast/2.4/BEAST/templates/TreePriors.xml
+Cannot find merge point named misc from TreePriors.xml in template. MergeWith ignored.
+Cannot find merge point named treePriorTemplates from TreePriors.xml in template. MergeWith ignored.
+Processing /home/cerabier/.beast/2.4/BEAST/templates/SubstModels.xml
+Cannot find merge point named substModelTemplates from SubstModels.xml in template. MergeWith ignored.
+Skipping /home/cerabier/workspace-beast2/beast2/./templates/ClockModels.xml since ClockModels.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/./templates/StarBeast.xml since StarBeast.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/./templates/ParametricDistributions.xml since ParametricDistributions.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/./templates/Standard.xml since Standard.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/./templates/TreePriors.xml since TreePriors.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/./templates/SubstModels.xml since SubstModels.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/templates/ClockModels.xml since ClockModels.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/templates/StarBeast.xml since StarBeast.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/templates/ParametricDistributions.xml since ParametricDistributions.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/templates/Standard.xml since Standard.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/templates/TreePriors.xml since TreePriors.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/templates/SubstModels.xml since SubstModels.xml is already processed
+Loading package BEAST v2.4.7
+Loading package BEAST v2.4.5
+Loading package SNAPP v1.3.0
+Loading template /home/cerabier/workspace-beast2/beast2/test/template123x666.xml
+Processing /home/cerabier/.beast/2.4/SNAPP/templates/SNAPP.xml
+Processing /home/cerabier/.beast/2.4/BEAST/templates/ClockModels.xml
+Cannot find merge point named clockModelTemplates from ClockModels.xml in template. MergeWith ignored.
+Processing /home/cerabier/.beast/2.4/BEAST/templates/StarBeast.xml
+Processing /home/cerabier/.beast/2.4/BEAST/templates/ParametricDistributions.xml
+Cannot find merge point named parametricDistributions from ParametricDistributions.xml in template. MergeWith ignored.
+Processing /home/cerabier/.beast/2.4/BEAST/templates/Standard.xml
+Processing /home/cerabier/.beast/2.4/BEAST/templates/TreePriors.xml
+Cannot find merge point named misc from TreePriors.xml in template. MergeWith ignored.
+Cannot find merge point named treePriorTemplates from TreePriors.xml in template. MergeWith ignored.
+Processing /home/cerabier/.beast/2.4/BEAST/templates/SubstModels.xml
+Cannot find merge point named substModelTemplates from SubstModels.xml in template. MergeWith ignored.
+Skipping /home/cerabier/workspace-beast2/beast2/./templates/ClockModels.xml since ClockModels.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/./templates/StarBeast.xml since StarBeast.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/./templates/ParametricDistributions.xml since ParametricDistributions.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/./templates/Standard.xml since Standard.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/./templates/TreePriors.xml since TreePriors.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/./templates/SubstModels.xml since SubstModels.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/templates/ClockModels.xml since ClockModels.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/templates/StarBeast.xml since StarBeast.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/templates/ParametricDistributions.xml since ParametricDistributions.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/templates/Standard.xml since Standard.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/templates/TreePriors.xml since TreePriors.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/templates/SubstModels.xml since SubstModels.xml is already processed
+data
+input
+input
+input
+parameter
+tree
+run
+Failed to load BEAGLE library: no hmsbeagle-jni in java.library.path
+template item data is ignored
+template item hky is ignored
+template item siteModel is ignored
+template item treeLikelihood is ignored
+template item hky.kappa is ignored
+template item tree is ignored
+null
+null
+Loading template /home/cerabier/workspace-beast2/beast2/templates/StarBeast.xml
+Processing /home/cerabier/.beast/2.4/SNAPP/templates/SNAPP.xml
+Processing /home/cerabier/.beast/2.4/BEAST/templates/ClockModels.xml
+Processing /home/cerabier/.beast/2.4/BEAST/templates/StarBeast.xml
+Processing /home/cerabier/.beast/2.4/BEAST/templates/ParametricDistributions.xml
+Processing /home/cerabier/.beast/2.4/BEAST/templates/Standard.xml
+Processing /home/cerabier/.beast/2.4/BEAST/templates/TreePriors.xml
+Processing /home/cerabier/.beast/2.4/BEAST/templates/SubstModels.xml
+Skipping /home/cerabier/workspace-beast2/beast2/./templates/ClockModels.xml since ClockModels.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/./templates/StarBeast.xml since StarBeast.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/./templates/ParametricDistributions.xml since ParametricDistributions.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/./templates/Standard.xml since Standard.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/./templates/TreePriors.xml since TreePriors.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/./templates/SubstModels.xml since SubstModels.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/templates/ClockModels.xml since ClockModels.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/templates/ParametricDistributions.xml since ParametricDistributions.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/templates/Standard.xml since Standard.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/templates/TreePriors.xml since TreePriors.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/templates/SubstModels.xml since SubstModels.xml is already processed
+Loading package BEAST v2.4.7
+Loading package BEAST v2.4.5
+Loading package SNAPP v1.3.0
+Loading template /home/cerabier/workspace-beast2/beast2/templates/StarBeast.xml
+Processing /home/cerabier/.beast/2.4/SNAPP/templates/SNAPP.xml
+Processing /home/cerabier/.beast/2.4/BEAST/templates/ClockModels.xml
+Processing /home/cerabier/.beast/2.4/BEAST/templates/StarBeast.xml
+Processing /home/cerabier/.beast/2.4/BEAST/templates/ParametricDistributions.xml
+Processing /home/cerabier/.beast/2.4/BEAST/templates/Standard.xml
+Processing /home/cerabier/.beast/2.4/BEAST/templates/TreePriors.xml
+Processing /home/cerabier/.beast/2.4/BEAST/templates/SubstModels.xml
+Skipping /home/cerabier/workspace-beast2/beast2/./templates/ClockModels.xml since ClockModels.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/./templates/StarBeast.xml since StarBeast.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/./templates/ParametricDistributions.xml since ParametricDistributions.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/./templates/Standard.xml since Standard.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/./templates/TreePriors.xml since TreePriors.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/./templates/SubstModels.xml since SubstModels.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/templates/ClockModels.xml since ClockModels.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/templates/ParametricDistributions.xml since ParametricDistributions.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/templates/Standard.xml since Standard.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/templates/TreePriors.xml since TreePriors.xml is already processed
+Skipping /home/cerabier/workspace-beast2/beast2/templates/SubstModels.xml since SubstModels.xml is already processed
+map
+map
+map
+map
+map
+map
+map
+map
+map
+map
+map
+map
+beauticonfig
+fragment
+taxonset
+tree
+treetop
+run
+NodeReheight operator requires at least 2 taxa while the taxon set (id=taxonsuperset) has only 1 taxa. If the XML file was set up in BEAUti, this probably means a taxon assignment needs to be set up in the taxonset panel.
+template item TreeOperators is ignored
+template item taxonsuperset is ignored
+template item Tree.t:Species is ignored
+template item treeTopFinder is ignored
+distribution
+plugin
+beast.evolution.sitemodel.SiteModel.substModel: java.lang.ClassCastException: beast.evolution.sitemodel.SiteModel cannot be cast to beast.evolution.substitutionmodel.SubstitutionModel
+plugin
+Adding beast.evolution.substitutionmodel.JukesCantor JC69.s:26
+plugin
+prior
+prior
+taxonset
+plugin
+tree
+plugin
+logger
+operator
+operator
+operator
+operator
+operator
+operator
+operator
+operator
+operator
+operator
+operator
+prior
+prior
+operator
+Failed to load BEAGLE library: no hmsbeagle-jni in java.library.path
+Adding beast.evolution.speciation.GeneTreeForSpeciesTreeDistribution treePrior.t:26
+Adding beast.evolution.sitemodel.SiteModel SiteModel.s:26
+Adding beast.evolution.likelihood.TreeLikelihood treeLikelihood.26
+Adding beast.math.distributions.Prior ClockPrior.c:26
+Adding beast.math.distributions.Prior MutationRatePrior.s:26
+Adding beast.evolution.alignment.TaxonSet 	TaxonSet.26
+
+Adding beast.evolution.tree.Tree ((((((25:0.009702622236805866,4:0.009702622236805866)26:0.011563497954487573,(12:0.0169375720427996,0:0.0169375720427996)27:0.00432854814849384)28:0.0877843159414378,5:0.10905043613273124)29:0.030011222211107802,(17:0.029048508151039935,((14:7.120327912822166E-4,18:7.120327912822166E-4)30:2.231447028624233E-4,1:9.3517749414464E-4)31:0.028113330656895294)32:0.11001315019279911)33:0.5126359812927763,((15:0.07533159411961342,22:0.07533159411961342)34:0.08756729966249137,(24:0.0635604346736793,21:0.0635604346736793)35:0.09933845910842548)36:0.48879874585451066)37:0.05203418372427193,(3:0.32662256271047707,((9:0.09670975349737634,(8:0.04699492118409846,23:0.04699492118409846)38:0.04971483231327788)39:0.16711082188588497,(2:0.1817500125498193,(((7:0.052311478579755454,(((10:0.013416002526750587,13:0.013416002526750587)40:0.0076481121996016775,16:0.021064114726352265)41:0.022393197101377035,6:0.0434573118277293)42:0.008854166752026153)43:0.04837507751557319,11:0.10068655609532864)44:0.07435714942054963,(20:0.1616516996073788,19:0.1616516996073788)45:0.013392005908499482)46:0.006706307033941011)47:0.08207056283344202)48:0.06280198732721576)49:0.3771092606504103)50:0.0
+Adding beast.evolution.speciation.RandomGeneTree ((((((25:0.009702622236805866,4:0.009702622236805866)26:0.011563497954487573,(12:0.0169375720427996,0:0.0169375720427996)27:0.00432854814849384)28:0.0877843159414378,5:0.10905043613273124)29:0.030011222211107802,(17:0.029048508151039935,((14:7.120327912822166E-4,18:7.120327912822166E-4)30:2.231447028624233E-4,1:9.3517749414464E-4)31:0.028113330656895294)32:0.11001315019279911)33:0.5126359812927763,((15:0.07533159411961342,22:0.07533159411961342)34:0.08756729966249137,(24:0.0635604346736793,21:0.0635604346736793)35:0.09933845910842548)36:0.48879874585451066)37:0.05203418372427193,(3:0.32662256271047707,((9:0.09670975349737634,(8:0.04699492118409846,23:0.04699492118409846)38:0.04971483231327788)39:0.16711082188588497,(2:0.1817500125498193,(((7:0.052311478579755454,(((10:0.013416002526750587,13:0.013416002526750587)40:0.0076481121996016775,16:0.021064114726352265)41:0.022393197101377035,6:0.0434573118277293)42:0.008854166752026153)43:0.04837507751557319,11:0.10068655609532864)44:0.07435714942054963,(20:0.1616516996073788,19:0.1616516996073788)45:0.013392005908499482)46:0.006706307033941011)47:0.08207056283344202)48:0.06280198732721576)49:0.3771092606504103)50:0.0
+Adding beast.evolution.tree.TreeHeightLogger TreeHeight.t:26
+Adding beast.core.Logger treelog.t:26
+Adding beast.evolution.operators.ScaleOperator ScaleOperator(proportionInvariantScaler.s:26)                              0.5000          0          0        NaN 
+Adding beast.evolution.operators.ScaleOperator ScaleOperator(mutationRateScaler.s:26)                                     0.5000          0          0        NaN 
+Adding beast.evolution.operators.ScaleOperator ScaleOperator(gammaShapeScaler.s:26)                                       0.5000          0          0        NaN 
+Adding beast.evolution.operators.ScaleOperator ScaleOperator(treeScaler.t:26)                                             0.5000          0          0        NaN 
+Adding beast.evolution.operators.ScaleOperator ScaleOperator(treeRootScaler.t:26)                                         0.5000          0          0        NaN 
+Adding beast.evolution.operators.Uniform Uniform(UniformOperator.t:26)                                                   -          0          0        NaN 
+Adding beast.evolution.operators.SubtreeSlide SubtreeSlide(SubtreeSlide.t:26)                                            1.0000          0          0        NaN 
+Adding beast.evolution.operators.Exchange Exchange(narrow.t:26)                                                           -          0          0        NaN 
+Adding beast.evolution.operators.Exchange Exchange(wide.t:26)                                                             -          0          0        NaN 
+Adding beast.evolution.operators.WilsonBalding WilsonBalding(WilsonBalding.t:26)                                               -          0          0        NaN 
+Adding beast.evolution.operators.UpDownOperator UpDownOperator(updown.26)                                                  0.7500          0          0        NaN 
+Adding beast.math.distributions.Prior GammaShapePrior.s:26
+Adding beast.math.distributions.Prior PropInvariantPrior.t:26
+Adding beast.evolution.operators.ScaleOperator ScaleOperator(StrictClockRateScaler.c:26)                                  0.7500          0          0        NaN 
+>>> No description for connector treePrior.t:$(n) == prior
+>>> No description for connector ClockPrior.c:$(n) == prior
+>>> No description for connector MutationRatePrior.s:$(n) == prior
+>>> No description for connector GammaShapePrior.s:$(n) == prior
+>>> No description for connector PropInvariantPrior.s:$(n) == prior
+distribution
+plugin
+beast.evolution.sitemodel.SiteModel.substModel: java.lang.ClassCastException: beast.evolution.sitemodel.SiteModel cannot be cast to beast.evolution.substitutionmodel.SubstitutionModel
+plugin
+Adding beast.evolution.substitutionmodel.JukesCantor JC69.s:29
+plugin
+prior
+prior
+taxonset
+plugin
+tree
+plugin
+logger
+operator
+operator
+operator
+operator
+operator
+operator
+operator
+operator
+operator
+operator
+operator
+prior
+prior
+operator
+Failed to load BEAGLE library: no hmsbeagle-jni in java.library.path
+Adding beast.evolution.speciation.GeneTreeForSpeciesTreeDistribution treePrior.t:29
+Adding beast.evolution.sitemodel.SiteModel SiteModel.s:29
+Adding beast.evolution.likelihood.TreeLikelihood treeLikelihood.29
+Adding beast.math.distributions.Prior ClockPrior.c:29
+Adding beast.math.distributions.Prior MutationRatePrior.s:29
+Adding beast.evolution.alignment.TaxonSet 	TaxonSet.29
+
+Adding beast.evolution.tree.Tree (((((((17:5.692001792631554E-4,16:5.692001792631554E-4)26:0.011523832317304002,(6:0.011328913255886865,13:0.011328913255886865)27:7.641192406802923E-4)28:0.07420291681005318,(14:0.0022081374004668704,21:0.0022081374004668704)29:0.08408781190615347)30:0.11298912365299436,((23:0.029913681237144635,19:0.029913681237144635)31:0.028615830544919327,(15:0.032381464771288754,2:0.032381464771288754)32:0.026148047010775208)33:0.14075556117755073)34:0.3194490995774626,((1:5.238869059465464E-4,25:5.238869059465464E-4)35:0.35355847079345754,3:0.3540823576994041)36:0.16465181483767322)37:0.4003289078405292,(24:0.4471048575379951,(20:0.10246514781313436,(5:0.04291568864535338,(4:0.015747224164195946,8:0.015747224164195946)38:0.027168464481157437)39:0.059549459167780976)40:0.34463970972486074)41:0.4719582228396114)42:1.3363753623564756,((9:0.10190364924357118,((12:0.017866116287525716,7:0.017866116287525716)43:0.007640916120930024,18:0.02550703240845574)44:0.07639661683511544)45:0.022245574345278546,((22:0.013489490002875287,0:0.013489490002875287)46:0.02774218540606985,(10:0.03197426836011979,11:0.03197426836011979)47:0.009257407048825349)48:0.08291754817990458)49:2.1312892191452324)50:0.0
+Adding beast.evolution.speciation.RandomGeneTree (((((((17:5.692001792631554E-4,16:5.692001792631554E-4)26:0.011523832317304002,(6:0.011328913255886865,13:0.011328913255886865)27:7.641192406802923E-4)28:0.07420291681005318,(14:0.0022081374004668704,21:0.0022081374004668704)29:0.08408781190615347)30:0.11298912365299436,((23:0.029913681237144635,19:0.029913681237144635)31:0.028615830544919327,(15:0.032381464771288754,2:0.032381464771288754)32:0.026148047010775208)33:0.14075556117755073)34:0.3194490995774626,((1:5.238869059465464E-4,25:5.238869059465464E-4)35:0.35355847079345754,3:0.3540823576994041)36:0.16465181483767322)37:0.4003289078405292,(24:0.4471048575379951,(20:0.10246514781313436,(5:0.04291568864535338,(4:0.015747224164195946,8:0.015747224164195946)38:0.027168464481157437)39:0.059549459167780976)40:0.34463970972486074)41:0.4719582228396114)42:1.3363753623564756,((9:0.10190364924357118,((12:0.017866116287525716,7:0.017866116287525716)43:0.007640916120930024,18:0.02550703240845574)44:0.07639661683511544)45:0.022245574345278546,((22:0.013489490002875287,0:0.013489490002875287)46:0.02774218540606985,(10:0.03197426836011979,11:0.03197426836011979)47:0.009257407048825349)48:0.08291754817990458)49:2.1312892191452324)50:0.0
+Adding beast.evolution.tree.TreeHeightLogger TreeHeight.t:29
+Adding beast.core.Logger treelog.t:29
+Adding beast.evolution.operators.ScaleOperator ScaleOperator(proportionInvariantScaler.s:29)                              0.5000          0          0        NaN 
+Adding beast.evolution.operators.ScaleOperator ScaleOperator(mutationRateScaler.s:29)                                     0.5000          0          0        NaN 
+Adding beast.evolution.operators.ScaleOperator ScaleOperator(gammaShapeScaler.s:29)                                       0.5000          0          0        NaN 
+Adding beast.evolution.operators.ScaleOperator ScaleOperator(treeScaler.t:29)                                             0.5000          0          0        NaN 
+Adding beast.evolution.operators.ScaleOperator ScaleOperator(treeRootScaler.t:29)                                         0.5000          0          0        NaN 
+Adding beast.evolution.operators.Uniform Uniform(UniformOperator.t:29)                                                   -          0          0        NaN 
+Adding beast.evolution.operators.SubtreeSlide SubtreeSlide(SubtreeSlide.t:29)                                            1.0000          0          0        NaN 
+Adding beast.evolution.operators.Exchange Exchange(narrow.t:29)                                                           -          0          0        NaN 
+Adding beast.evolution.operators.Exchange Exchange(wide.t:29)                                                             -          0          0        NaN 
+Adding beast.evolution.operators.WilsonBalding WilsonBalding(WilsonBalding.t:29)                                               -          0          0        NaN 
+Adding beast.evolution.operators.UpDownOperator UpDownOperator(updown.29)                                                  0.7500          0          0        NaN 
+Adding beast.math.distributions.Prior GammaShapePrior.s:29
+Adding beast.math.distributions.Prior PropInvariantPrior.t:29
+Adding beast.evolution.operators.ScaleOperator ScaleOperator(StrictClockRateScaler.c:29)                                  0.7500          0          0        NaN 
+>>> No description for connector treePrior.t:$(n) == prior
+>>> No description for connector ClockPrior.c:$(n) == prior
+>>> No description for connector MutationRatePrior.s:$(n) == prior
+>>> No description for connector GammaShapePrior.s:$(n) == prior
+>>> No description for connector PropInvariantPrior.s:$(n) == prior
+PARTITIONS0:
+
+[[0, 1], [0, 1], [0, 1]]
+Could not find beastObject with id treeLikelihood.Species. Typo in template perhaps?
+
+PARTITIONS0:
+
+[[0, 1], [0, 1], [0, 1]]
+branchRateModel
+operator
+upDownOperator
+prior
+Adding beast.evolution.branchratemodel.StrictClockModel StrictClock.c:26
+Adding beast.evolution.operators.ScaleOperator ScaleOperator(StrictClockRateScaler.c:26)                                  0.7500          0          0        NaN 
+Adding beast.evolution.operators.UpDownOperator UpDownOperator(strictClockUpDownOperator.c:26)                             0.7500          0          0        NaN 
+Adding beast.math.distributions.Prior ClockPrior.c:26
+>>> No description for connector ClockPrior.c:$(n) == prior
+branchRateModel
+operator
+upDownOperator
+prior
+Adding beast.evolution.branchratemodel.StrictClockModel StrictClock.c:29
+Adding beast.evolution.operators.ScaleOperator ScaleOperator(StrictClockRateScaler.c:29)                                  0.7500          0          0        NaN 
+Adding beast.evolution.operators.UpDownOperator UpDownOperator(strictClockUpDownOperator.c:29)                             0.7500          0          0        NaN 
+Adding beast.math.distributions.Prior ClockPrior.c:29
+>>> No description for connector ClockPrior.c:$(n) == prior
+PARTITIONS:
+
+[[0, 1], [0, 1], [0, 1]]
+]]></system-err>
+</testsuite>

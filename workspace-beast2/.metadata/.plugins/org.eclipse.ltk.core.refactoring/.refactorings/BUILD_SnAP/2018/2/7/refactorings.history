@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Copy element &apos;&apos; to &apos;snap.likelihood.SnAPTreeLikelihood.showPatternLikelihoodsAndQuit&apos;&#x0A;- Original project: &apos;BUILD_SnAP&apos;&#x0A;- Destination element: &apos;snap.likelihood.SnAPTreeLikelihood.showPatternLikelihoodsAndQuit&apos;&#x0A;- Original element: &apos;snap.likelihood.SnAPTreeLikelihood.showPatternLikelihoodsAndQuit&apos;" description="Copy field" destination="/src&lt;snap.likelihood{SnAPTreeLikelihood.java[SnAPTreeLikelihood^showPatternLikelihoodsAndQuit" element1="/src&lt;snap.likelihood{SnAPTreeLikelihood.java[SnAPTreeLikelihood^showPatternLikelihoodsAndQuit" flags="589830" id="org.eclipse.jdt.ui.copy" members="1" policy="org.eclipse.jdt.ui.copyMembers" stamp="1518539614926" version="1.0"/>
+</session>

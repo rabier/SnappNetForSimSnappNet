@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Copy element &apos;SnAPPrior.java&apos; to &apos;snaplikelihood.COMPLEX.java&apos;&#x0A;- Original project: &apos;BUILD_SnAP&apos;&#x0A;- Destination element: &apos;snaplikelihood.COMPLEX.java&apos;&#x0A;- Original element: &apos;snap.likelihood.SnAPPrior.java&apos;" description="Copy compilation unit" destination="=TanjaShort/src&lt;snaplikelihood{COMPLEX.java" element1="/src&lt;snap.likelihood{SnAPPrior.java" files="0" flags="589830" folders="0" id="org.eclipse.jdt.ui.copy" policy="org.eclipse.jdt.ui.copyResources" stamp="1522412891844" units="1" version="1.0"/>
+</session>

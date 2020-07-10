@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<qualifiedTypeNameHistroy>
+<fullyQualifiedTypeName name="beast.core.Input"/>
+<fullyQualifiedTypeName name="beast.evolution.datatype.Nucleotide"/>
+<fullyQualifiedTypeName name="beast.core.Description"/>
+<fullyQualifiedTypeName name="beast.core.Citation"/>
+<fullyQualifiedTypeName name="java.io.PrintWriter"/>
+<fullyQualifiedTypeName name="java.awt.List"/>
+<fullyQualifiedTypeName name="beast.evolution.tree.Node"/>
+<fullyQualifiedTypeName name="java.util.ArrayList"/>
+<fullyQualifiedTypeName name="java.util.List"/>
+<fullyQualifiedTypeName name="beast.evolution.alignment.TaxonSet"/>
+<fullyQualifiedTypeName name="com.google.common.collect.Multiset"/>
+<fullyQualifiedTypeName name="java.util.Arrays"/>
+<fullyQualifiedTypeName name="matrix.QMatrix"/>
+<fullyQualifiedTypeName name="beast.core.Input.Validate"/>
+<fullyQualifiedTypeName name="beast.core.parameter.RealParameter"/>
+<fullyQualifiedTypeName name="beast.core.util.Log"/>
+</qualifiedTypeNameHistroy>

@@ -1,0 +1,67 @@
+#
+#model:
+#
+#<?xml version="1.0" encoding="UTF-8" standalone="no"?><input id="posterior" spec="beast.core.util.CompoundDistribution">
+#    <distribution id="prior" spec="beast.core.util.CompoundDistribution">
+#        <distribution id="snapprior.JDD1-all-chr" rateprior="gamma" spec="snap.likelihood.SnAPPrior">
+#            <parameter estimate="false" id="alpha" lower="0.0" name="alpha">11.75</parameter>
+#            <parameter estimate="false" id="beta" lower="0.0" name="beta">109.73</parameter>
+#            <parameter estimate="false" id="kappa" lower="0.0" name="kappa">1.0</parameter>
+#            <parameter id="coalescenceRate" name="coalescenceRate">10.0</parameter>
+#            <parameter id="lambda" lower="0.0" name="lambda">0.01</parameter>
+#            <tree clusterType="upgma" id="Tree.JDD1-all-chr" nodetype="snap.NodeData" spec="beast.util.ClusterTree">
+#                <taxa dataType="integerdata" id="snap.JDD1-all-chr" spec="snap.Data">
+#                    <taxonset id="Or3" spec="beast.evolution.alignment.TaxonSet">
+#                        <taxon id="W1943_Or3" spec="beast.evolution.alignment.Taxon"/>
+#                        <taxon id="W2036_Or3" spec="beast.evolution.alignment.Taxon"/>
+#                    </taxonset>
+#                    <taxonset id="Jap" spec="beast.evolution.alignment.TaxonSet">
+#                        <taxon id="B204_Jap" spec="beast.evolution.alignment.Taxon"/>
+#                        <taxon id="IRIS_313-11924_Jap" spec="beast.evolution.alignment.Taxon"/>
+#                    </taxonset>
+#                    <taxonset id="Aus" spec="beast.evolution.alignment.TaxonSet">
+#                        <taxon id="IRIS_313-11058_Aus" spec="beast.evolution.alignment.Taxon"/>
+#                        <taxon id="IRIS_313-11737_Aus" spec="beast.evolution.alignment.Taxon"/>
+#                    </taxonset>
+#                    <taxonset id="Ind" spec="beast.evolution.alignment.TaxonSet">
+#                        <taxon id="IRIS_313-11819_Ind" spec="beast.evolution.alignment.Taxon"/>
+#                        <taxon id="IRIS_313-11796_Ind" spec="beast.evolution.alignment.Taxon"/>
+#                    </taxonset>
+#                    <taxonset id="Aro" spec="beast.evolution.alignment.TaxonSet">
+#                        <taxon id="IRIS_313-11062_Aro" spec="beast.evolution.alignment.Taxon"/>
+#                        <taxon id="IRIS_313-11825_Aro" spec="beast.evolution.alignment.Taxon"/>
+#                    </taxonset>
+#                    <taxonset id="Or1" spec="beast.evolution.alignment.TaxonSet">
+#                        <taxon id="W3105_Or1" spec="beast.evolution.alignment.Taxon"/>
+#                        <taxon id="W1559_Or1" spec="beast.evolution.alignment.Taxon"/>
+#                    </taxonset>
+#                </taxa>
+#                <parameter id="RealParameter.0" lower="0.0" name="clock.rate" upper="0.0">1.0</parameter>
+#            </tree>
+#        </distribution>
+#        <prior id="lambdaPrior.JDD1-all-chr" name="distribution" x="@lambda">
+#            <OneOnX id="OneOnX.2" name="distr"/>
+#        </prior>
+#        <prior id="uPrior.JDD1-all-chr" name="distribution">
+#            <parameter id="u" lower="0.0" name="x">1.0</parameter>
+#            <OneOnX id="OneOnX.4" name="distr"/>
+#        </prior>
+#        <prior id="vPrior.JDD1-all-chr" name="distribution">
+#            <parameter id="v" lower="0.0" name="x">1.0</parameter>
+#            <OneOnX id="OneOnX.5" name="distr"/>
+#        </prior>
+#    </distribution>
+#    <distribution id="likelihood" spec="beast.core.util.CompoundDistribution">
+#        <distribution data="@snap.JDD1-all-chr" id="treeLikelihood.JDD1-all-chr" pattern="coalescenceRate" spec="snap.likelihood.SnAPTreeLikelihood" tree="@Tree.JDD1-all-chr">
+#            <siteModel id="MutationSiteModel.JDD1-all-chr" spec="beast.evolution.sitemodel.SiteModel">
+#                <parameter estimate="false" id="mutationRate" name="mutationRate">1.0</parameter>
+#                <parameter estimate="false" id="shape" name="shape">2.0</parameter>
+#                <parameter estimate="false" id="proportionInvariant" name="proportionInvariant">0.0</parameter>
+#                <substModel coalescenceRate="@coalescenceRate" id="MutationModel" mutationRateU="@u" mutationRateV="@v" spec="snap.likelihood.SnapSubstitutionModel"/>
+#            </siteModel>
+#        </distribution>
+#    </distribution>
+#</input>
+#
+Sample	posterior	likelihood	prior	u	v	theta0	theta1	theta2	theta3	theta4	theta5	theta6	theta7	theta8	theta9	theta10	TreeHeightLogger
+0	-53110.922025307445	-52528.15299786306	-582.7690274443886	1.0	1.0	0.2	0.2	0.2	0.2	0.2	0.2	0.2	0.2	0.2	0.2	0.2	0.1447099394172266

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Copy package &apos;snap.distribution&apos; to &apos;TanjaShort/src/speciesnetwork.tools&apos;&#x0A;- Original project: &apos;BUILD_SnAP&apos;&#x0A;- Destination element: &apos;TanjaShort/src/speciesnetwork.tools&apos;&#x0A;- Original element: &apos;BUILD_SnAP/src/snap.distribution&apos;" description="Copy package" destination="=TanjaShort/src&lt;speciesnetwork.tools" element1="/src&lt;snap.distribution" flags="589830" fragments="1" id="org.eclipse.jdt.ui.copy" policy="org.eclipse.jdt.ui.copyPackages" stamp="1516963246842" version="1.0"/>
+</session>

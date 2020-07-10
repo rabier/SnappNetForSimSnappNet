@@ -1,0 +1,100 @@
+package speciesnetwork;
+
+import java.util.List;
+
+import beast.core.util.Log;
+import beast.evolution.alignment.TaxonSet;
+
+public class SnAPLikelihoodCoreGH {
+
+	SiteProbabilityCalculatorGH [] m_siteProbabilityCalculator;
+	int numPatterns;
+	
+	public SnAPLikelihoodCoreGH(Network speciesNetwork, SnapData data) {    	    	     
+		
+		numPatterns = data.getPatternCount();
+        m_siteProbabilityCalculator = new SiteProbabilityCalculatorGH[numPatterns];
+        
+        for(int id = 0; id < numPatterns; id++) {
+        	m_siteProbabilityCalculator[id]= new SiteProbabilityCalculatorGH(speciesNetwork);
+        }
+        
+        
+       /* 
+        System.out.println("Je vais afficher les metada\n");
+        NetworkNode[] myTabNode=speciesNetwork.getAllNodes();
+        
+        for (int i=0; i<myTabNode.length; i++) {
+        	
+        	System.out.println("Je suis le noeud" + myTabNode[i].getNr() +"\n");
+        	System.out.println("Voici mes metadata" + myTabNode[i].getMetaDataNames() +"\n");
+        	myTabNode[i].setMetaData("Theta", i*6);
+        	System.out.println("Revoici mes metadata" + myTabNode[i].getMetaDataNames() +"\n");
+        	System.out.println("Revoici mes metadata assoice a theta" + myTabNode[i].getMetaData("Theta") +"\n");      	
+        }
+        */
+        
+        
+	
+	}
+	
+	
+	public double [] computeLogLikelihood(SnapData data, Network speciesNetwork, double u, double v, 
+            Double [] coalescenceRate) throws Exception
+	{
+						
+		int numPatterns = data.getPatternCount();
+		
+		//Temporarily store pattern probabilities... used for numerical checks.
+        double [] patternProb = new double[numPatterns];
+        List<TaxonSet> taxonSets=data.m_taxonsets.get();
+            
+		for(int id = 0; id < numPatterns; id++) {
+		//for(int id = 0; id < 1; id++) {
+            int [] dataAtThisSite = data.getPattern(id);
+            int [] lineageCounts = data.getPatternLineagCounts(id);	   
+                        
+            //CE
+            //data.getPatternLineagCounts(id);            
+            //END CE                        
+            System.out.println("HELLOOOOO \n");
+            
+            
+            Log.debug.println("Je m interesse au pattern"+ id+ "\n");            
+            //CE
+            for(int ind = 0; ind < data.getPatternLineagCounts(id).length; ind++) {
+            Log.debug.println("Voici le nbre de lignees getPatternLineageCount"+ data.getPatternLineagCounts(id)[ind]+ "\n");
+            }
+            //END CE
+            
+            Log.debug.println("Je vais calculer le computeSiteLikelihood je suis ds SnAPLikelihoodCoreGH.java\n");               
+            patternProb[id] = m_siteProbabilityCalculator[id].computeSiteLikelihood(dataAtThisSite, taxonSets, lineageCounts, speciesNetwork, u, v, coalescenceRate);
+            Log.debug.println("Pour rappel, Je me suis juste interesse au pattern"+ id+ "\n");
+            Log.debug.println("voici la likelihood du site " + patternProb[id] + "\n");  
+                        
+            for (int k=0; k<coalescenceRate.length; k++) {            
+            	Log.debug.println("pour la branch numero " + k + "voici la valeur du coalescent rate utilise " + coalescenceRate[k] + "\n");            
+            }
+            
+            
+            //CE try afin de relacher tout ce qui est Fmatrix
+            m_siteProbabilityCalculator[id]=null;            
+            //END CE try
+            
+            
+            
+        }
+	
+		
+		
+		return patternProb;
+	
+		
+	}	
+	
+	
+
+	
+	
+	
+}

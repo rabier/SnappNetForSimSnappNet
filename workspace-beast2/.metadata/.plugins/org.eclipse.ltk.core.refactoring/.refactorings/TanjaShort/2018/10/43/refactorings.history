@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Copy element &apos;AddReticulationGH.java&apos; to &apos;speciesnetwork.operators.DeleteReticulation.java&apos;&#x0A;- Original project: &apos;TanjaShort&apos;&#x0A;- Destination element: &apos;speciesnetwork.operators.DeleteReticulation.java&apos;&#x0A;- Original element: &apos;speciesnetwork.operators.AddReticulationGH.java&apos;" description="Copy compilation unit" destination="/src&lt;speciesnetwork.operators{DeleteReticulation.java" element1="/src&lt;speciesnetwork.operators{AddReticulationGH.java" files="0" flags="589830" folders="0" id="org.eclipse.jdt.ui.copy" policy="org.eclipse.jdt.ui.copyResources" stamp="1540551096657" units="1" version="1.0"/>
+</session>

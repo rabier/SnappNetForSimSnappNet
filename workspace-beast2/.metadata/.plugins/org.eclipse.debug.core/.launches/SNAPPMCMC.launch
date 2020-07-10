@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<launchConfiguration type="org.eclipse.jdt.launching.localJavaApplication">
+<listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
+<listEntry value="/BUILD_SnAP/src/snap/app/mcmc/SNAPPMCMC.java"/>
+</listAttribute>
+<listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
+<listEntry value="1"/>
+</listAttribute>
+<stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="snap.app.mcmc.SNAPPMCMC"/>
+<stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="exampleTest/JDD1.xml"/>
+<stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="BUILD_SnAP"/>
+</launchConfiguration>

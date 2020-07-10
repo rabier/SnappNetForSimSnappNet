@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" output="build" path="src"/>
+	<classpathentry kind="var" path="JRE_LIB" rootpath="JRE_SRCROOT" sourcepath="JRE_SRC"/>
+	<classpathentry kind="lib" path="/home/cerabier/workspace-beast2/beast2/lib/beagle.jar"/>
+	<classpathentry kind="lib" path="/home/cerabier/workspace-beast2/beast2/lib/jam.jar"/>
+	<classpathentry kind="lib" path="/home/cerabier/workspace-beast2/beast2/lib/colt.jar"/>
+	<classpathentry kind="lib" path="/home/cerabier/workspace-beast2/beast2/lib/fest.jar"/>
+	<classpathentry kind="lib" path="/home/cerabier/workspace-beast2/beast2/lib/junit-4.8.2.jar"/>
+	<classpathentry kind="lib" path="/home/cerabier/workspace-beast2/beast2/lib/antlr-runtime-4.5.jar"/>
+	<classpathentry kind="src" path="/beast2"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

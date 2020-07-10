@@ -1,0 +1,10 @@
+<itsabeastystatewerein version='2.0' sample='1'>
+<statenode id='tree'>((0:0.1,1:0.1)3:0.1,2:0.2)4:0.0</statenode>
+<statenode id='coalescenceRate'>coalescenceRate[5 1] (-Infinity,Infinity): 0.014598100145790107 0.01 0.01 0.01 0.01 </statenode>
+<statenode id='v'>v[1 1] (0.0,Infinity): 1.0 </statenode>
+<statenode id='u'>u[1 1] (0.0,Infinity): 1.0 </statenode>
+<statenode id='alpha'>alpha[1 1] (0.0,Infinity): 2.0 </statenode>
+<statenode id='beta'>beta[1 1] (0.0,Infinity): 20.0 </statenode>
+<statenode id='lambda'>lambda[1 1] (0.0,Infinity): 54.1667 </statenode>
+<statenode id='kappa'>kappa[1 1] (0.0,Infinity): 34.6574 </statenode>
+</itsabeastystatewerein>
