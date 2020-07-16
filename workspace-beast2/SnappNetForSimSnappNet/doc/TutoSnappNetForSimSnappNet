@@ -6,7 +6,19 @@ cd ~/workspace-beast2/SnappNetForSimSnappNet/deliverable
 
 ***** To run a MCMC Analysis with SnappNetForSimSnappNet
 
+Networks A , B and C are described at http://charles-elie.rabier.pagesperso-orange.fr/doc/SimSnappNet.html
+
+The xml were obtained using our simulator SimSnappNet
+
+*** Command line 
+
 java -jar SnappNetForSimSnappNet.jar ../example/test_NetA_SnappNetForSimSnappNet.xml
+
+java -jar SnappNetForSimSnappNet.jar ../example/test_NetA_C2R2Q2A2L2_seed_1_nsites_1000.xml 
+
+java -jar SnappNetForSimSnappNet.jar ../example/test_NetB_C2R2Q2A2L2_seed_1_nsites_1000.xml 
+
+java -jar SnappNetForSimSnappNet.jar ../example/test_NetC_R1A1B5C5D1_seed_1_nsites_1000.xml 
 
 
 for developpers: in eclipse , we are using the run configuration called ConfigOurSnappNetForSimSnappNet
